@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation_file"
+    app:startDestination="@id/currentWeather">
+
+    <fragment
+        android:id="@+id/currentWeather"
+        android:name="com.example.weatherapp.view.CurrentWeather"
+        android:label="fragment_current_weather"
+        tools:layout="@layout/fragment_current_weather" >
+        <action
+            android:id="@+id/action_currentWeather_to_placesList"
+            app:destination="@id/placesList" />
+        <action
+            android:id="@+id/action_currentWeather_to_currentWeatherAccessibility"
+            app:destination="@id/currentWeatherAccessibility"
+            app:popUpTo="@+id/currentWeather"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/placesList"
+        android:name="com.example.weatherapp.view.PlacesList"
+        android:label="fragment_places_list"
+        tools:layout="@layout/fragment_places_list" >
+        <action
+            android:id="@+id/action_placesList_to_currentWeather"
+            app:destination="@id/currentWeather"
+            app:popUpTo="@+id/currentWeather"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/currentWeatherAccessibility"
+        android:name="com.example.weatherapp.view.CurrentWeatherAccessibility"
+        android:label="CurrentWeatherAccessibility" >
+        <action
+            android:id="@+id/action_currentWeatherAccessibility_to_currentWeather"
+            app:destination="@id/currentWeather"
+            app:popUpTo="@+id/currentWeatherAccessibility"
+            app:popUpToInclusive="true" />
+    </fragment>
+</navigation>
