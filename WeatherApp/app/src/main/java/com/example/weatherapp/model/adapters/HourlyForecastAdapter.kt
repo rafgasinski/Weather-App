@@ -46,8 +46,6 @@ class HourlyForecastAdapter(var hourlyForecastList: List<Hourly>?, var forecastV
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
 
-        val currentItem = hourlyForecastList?.get(position)
-
         val newIconCode = hourlyForecastList?.get(position)?.weather?.get(0)?.icon
                 ?.replace("n","")
                 ?.replace("d","")

@@ -89,7 +89,6 @@ class CurrentWeather : Fragment() {
          * Navigation setup, changing main view in SharedPreferences
          * */
 
-
         moveToPlaceList.setOnClickListener { it.findNavController().navigate(R.id.action_currentWeather_to_placesList) }
 
         switchViewToAccessibility.setOnClickListener {

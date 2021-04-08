@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
@@ -96,8 +97,6 @@ class PlacesList : Fragment() {
             activity?.let { Places.initialize(it, apiKey) }
         }
 
-        val placesClient = activity?.let { Places.createClient(it) }
-
         val autocompleteFragment =
             childFragmentManager.findFragmentById(R.id.autocomplete_fragment)
                 as AutocompleteSupportFragment
@@ -157,6 +156,9 @@ class PlacesList : Fragment() {
                         editor?.commit()
 
                         findNavController().navigate(R.id.action_placesList_to_currentWeather)
+                    }
+                    else{
+                        Toast.makeText(requireContext(), "Place already listed.", Toast.LENGTH_SHORT).show();
                     }
                 }
                 Log.i(TAG, "Place: ${place.address}, ${place.id}")

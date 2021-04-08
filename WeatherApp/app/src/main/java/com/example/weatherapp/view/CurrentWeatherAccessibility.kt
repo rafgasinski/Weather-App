@@ -136,8 +136,6 @@ class CurrentWeatherAccessibility : Fragment() {
             activity?.let { Places.initialize(it, apiKey) }
         }
 
-        val placesClient = activity?.let { Places.createClient(it) }
-
         val autocompleteFragment =
                 childFragmentManager.findFragmentById(R.id.autocomplete_fragment)
                         as AutocompleteSupportFragment
