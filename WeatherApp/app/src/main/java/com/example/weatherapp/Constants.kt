@@ -12,5 +12,8 @@ class Constants {
         const val SH_ACCESSIBILITY_KEY = "SH_ACCESSIBILITY_KEY"
         const val DATE_TIME_FORMAT = "HH:mm"
         const val PLACES_API_KEY = ""
+
+        const val BASE_URL = "https://api.openweathermap.org/"
+        const val WEATHER_API_KEY = ""
     }
 }
