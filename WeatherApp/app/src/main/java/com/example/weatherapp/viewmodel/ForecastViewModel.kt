@@ -34,6 +34,5 @@ class ForecastViewModel(application: Application) : AndroidViewModel(application
     companion object{
         var defaultLat = 50.2584
         var defaultLon = 19.0275
-        var userCity = ""
     }
 }

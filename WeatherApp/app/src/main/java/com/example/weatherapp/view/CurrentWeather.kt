@@ -7,12 +7,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.view.marginBottom
-import androidx.core.view.marginLeft
-import androidx.core.view.marginRight
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -81,7 +77,6 @@ class CurrentWeather : Fragment() {
         return inflater.inflate(R.layout.fragment_current_weather, container, false)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -112,7 +107,6 @@ class CurrentWeather : Fragment() {
     /**
      * Getting response from OpenWeather API based on SharedPrefences key
      * */
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getForecastAndUpdateView(){
         try{
 
@@ -131,7 +125,6 @@ class CurrentWeather : Fragment() {
         }
         forecastViewModel.responseBody.observe(viewLifecycleOwner, Observer { response ->
             updateCurrentDayData(response)
-
             response.hourly[0].temp = response.current.temp
             response.hourly[0].windSpeed = response.current.windSpeed
             response.hourly[0].weather[0].icon = response.current.weather[0].icon
@@ -154,7 +147,6 @@ class CurrentWeather : Fragment() {
     /**
      * Update view  with current weather data
      * */
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun updateCurrentDayData(oneCallResponse: OneCallResponse){
 
         val current = oneCallResponse.current

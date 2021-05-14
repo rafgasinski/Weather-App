@@ -41,14 +41,12 @@ interface OneCallApi {
                     .addInterceptor(requestInterceptor)
                     .build()
 
-            val api: OneCallApi = Retrofit.Builder()
+            return Retrofit.Builder()
                     .client(okHttpClient)
                     .baseUrl(Constants.BASE_URL)
                     .addConverterFactory(GsonConverterFactory.create()) // Retrofit must know how serialize the data
                     .build()
                     .create(OneCallApi::class.java)
-
-            return api
         }
     }
 }
