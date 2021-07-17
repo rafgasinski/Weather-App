@@ -1,16 +1,13 @@
 # Weather-App
-In order to use app the correct way, there is need to place your Open Weather API and Google Place API key inside Constants class.
+## About
+Application shows current weather data and forecast. The user can search for a location or use his own. After searching, the app will store valid locations in its database.
 
-Current weather:         |  Forecast:
-:-------------------------:|:-------------------------:
-![MainView](https://user-images.githubusercontent.com/61454002/114322112-c6b4e480-9b1e-11eb-9ee8-8216f2588c15.jpg) |  ![Forecast](https://user-images.githubusercontent.com/61454002/114322107-c583b780-9b1e-11eb-8041-b564d0f5459e.jpg)
+## Features
+* Weather data from user's current or selected location
+* OS theme support
 
-Places list:       |  Google search:
-:-------------------------:|:-------------------------:
-![PlacesList](https://user-images.githubusercontent.com/61454002/114322111-c6b4e480-9b1e-11eb-8d40-d4b9d341d637.jpg) |  ![GoogleSearch](https://user-images.githubusercontent.com/61454002/114322109-c6b4e480-9b1e-11eb-9ba4-62ec01686d5d.jpg)
+## Screenshots
 
-Accessibility View:         |  Forecast:
-:-------------------------:|:-------------------------:
-![Accessibility](https://user-images.githubusercontent.com/61454002/114322108-c61c4e00-9b1e-11eb-8e8f-4e18f7a29a7a.jpg) |  ![AccessibilityForecast](https://user-images.githubusercontent.com/61454002/114322113-c74d7b00-9b1e-11eb-8b58-05e634482a7b.jpg)
+<img src="https://user-images.githubusercontent.com/61454002/126045682-c685fb62-052a-458a-a97e-db14d9fb47d5.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126045685-d0ecd2e6-680f-4d05-a416-fea41ab51e95.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126045732-7eb72d0c-4a95-4777-9ce2-ffd635d19e97.jpg" width=22% height=22%>    <img src="https://user-images.githubusercontent.com/61454002/126045730-14fa411f-ced6-4938-81cd-b9ef279835ef.jpg" width=22% height=22%>
 
-
+<img src="https://user-images.githubusercontent.com/61454002/126045738-ee4f7332-c42e-4995-8830-76153af5ac66.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126045744-a0769452-a76d-4b70-89dc-f73cd17e0137.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126045742-631aad7e-010c-45be-b583-4700aa826253.jpg" width=22% height=22%>    <img src="https://user-images.githubusercontent.com/61454002/126045740-214f1962-8508-4bb4-a41c-f560954b6cf0.jpg" width=22% height=22%>
