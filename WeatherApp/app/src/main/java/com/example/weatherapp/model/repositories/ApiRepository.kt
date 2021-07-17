@@ -1,17 +1,18 @@
 package com.example.weatherapp.model.repositories
 
-import android.util.Log
-import com.example.weatherapp.model.api.OneCallApi
-import com.example.weatherapp.model.response.OneCallResponse
+import com.example.weatherapp.model.api.OpenWeatherApi
+import com.example.weatherapp.model.response.city.CityResponse
+import com.example.weatherapp.model.response.onecall.OneCallResponse
 import retrofit2.Response
 
-const val DEFAULT_PARAMS = "minutely"
-
-val oneCallApiService = OneCallApi()
+val oneCallApiService = OpenWeatherApi()
 
 class ApiRepository {
-            suspend fun getOneCall(lat: String, lon: String, exclude: String = DEFAULT_PARAMS) : Response<OneCallResponse> {
-                Log.d("oneCallApi", "oneCallApiResponse")
-                return oneCallApiService.getOneCallForecast(lat, lon, exclude)
-            }
+    suspend fun getOneCall(lat: String, lon: String) : Response<OneCallResponse> {
+        return oneCallApiService.getOneCallForecast(lat, lon)
+    }
+
+    suspend fun getCityData(name: String) : Response<CityResponse> {
+        return oneCallApiService.getCityData(name)
+    }
 }

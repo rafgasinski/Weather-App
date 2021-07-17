@@ -1,195 +1,139 @@
 package com.example.weatherapp.view
 
-import android.content.ContentValues.TAG
-import android.content.SharedPreferences
+import android.R.attr
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.os.SystemClock
+import android.view.*
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.SearchView
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.weatherapp.R
-import com.example.weatherapp.Constants
+import com.example.weatherapp.databinding.FragmentPlacesListBinding
+import com.example.weatherapp.model.adapters.ItemMoveHelper
 import com.example.weatherapp.model.adapters.PlacesListAdapter
-import com.example.weatherapp.model.db.Search
-import com.example.weatherapp.model.db.SwipeToDelete
+import com.example.weatherapp.model.db.Place
+import com.example.weatherapp.utils.ActionButton
+import com.example.weatherapp.utils.ActionButtonClickListener
 import com.example.weatherapp.viewmodel.PlacesListViewModel
-import com.google.android.gms.common.api.Status
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.model.TypeFilter
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
-import kotlinx.android.synthetic.main.fragment_places_list.*
+import java.util.*
 
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [PlacesList.newInstance] factory method to
- * create an instance of this fragment.
- */
 class PlacesList : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    lateinit var placesListViewModel: PlacesListViewModel
-    lateinit var viewManager: RecyclerView.LayoutManager
-    lateinit var adapterPlacesList: PlacesListAdapter
+    private var _binding: FragmentPlacesListBinding? = null
+    private val binding get() = _binding!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var placesListViewModel: PlacesListViewModel
+
+    private lateinit var adapterLocationsList: PlacesListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_places_list, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        back.setOnClickListener { x -> x.findNavController().navigate(R.id.action_placesList_to_currentWeather) }
+    ): View {
+        _binding = FragmentPlacesListBinding.inflate(inflater, container, false)
 
         placesListViewModel = ViewModelProvider(requireActivity()).get(PlacesListViewModel::class.java)
-        viewManager = LinearLayoutManager(requireContext())
 
-        adapterPlacesList = PlacesListAdapter(placesListViewModel.allPlaces, placesListViewModel )
+        placesListViewModel.updateList()
 
-        placesList_recycler_view.apply {
-            adapter = adapterPlacesList
-            layoutManager = viewManager
+        adapterLocationsList = PlacesListAdapter(placesListViewModel, binding.searchView)
+
+        binding.toolbar.setNavigationOnClickListener {
+            findNavController().navigate(PlacesListDirections.actionPlacesListToCurrentWeather())
         }
 
-        placesListViewModel.allPlaces.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
-            adapterPlacesList.notifyDataSetChanged()
+        if(resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                activity?.window?.insetsController?.setSystemBarsAppearance(WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS)
+            } else {
+                @Suppress("DEPRECATION")
+                activity?.window?.decorView?.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                } else {
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                }
+
+            }
+        }
+
+        placesListViewModel.allPlacesLiveData.observe(viewLifecycleOwner, { placesList ->
+            adapterLocationsList.setData(placesList as ArrayList<Place>)
         })
 
-        var itemTouchHelper = ItemTouchHelper(SwipeToDelete(adapterPlacesList))
-        itemTouchHelper.attachToRecyclerView(placesList_recycler_view)
+        object : ItemMoveHelper(adapterLocationsList, adapterLocationsList, binding.placesRecyclerView, binding.searchView, 180) {
+            override fun instantiateActionButton(
+                viewHolder: RecyclerView.ViewHolder,
+                buffer: MutableList<ActionButton>
+            ) {
+                buffer.add(
+                    ActionButton(requireContext(), R.drawable.ic_delete_row,
+                        object : ActionButtonClickListener {
+                            override fun onClick(pos: Int) {
+                                adapterLocationsList.deleteItem(pos)
+                            }
 
-        /**
-         * Setup autocomplete fragment, Places API
-         * */
-        val apiKey = Constants.PLACES_API_KEY
-
-        if (!Places.isInitialized()) {
-            activity?.let { Places.initialize(it, apiKey) }
+                        })
+                )
+            }
         }
 
-        val autocompleteFragment =
-            childFragmentManager.findFragmentById(R.id.autocomplete_fragment)
-                as AutocompleteSupportFragment
+        binding.placesRecyclerView.apply {
+            adapter = adapterLocationsList
+            alpha = 0f
+            animate().setDuration(600).alpha(1f)
+        }
 
-        autocompleteFragment.view?.setBackgroundColor(4292335575.toInt())
-        autocompleteFragment.setHint("")
+        binding.searchView.apply {
+            val searchText = this.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
+            searchText.typeface = ResourcesCompat.getFont(requireContext(), R.font.metropolis_regular)
 
-        // Specify the types of place data to return.
-        autocompleteFragment.setPlaceFields(listOf(Place.Field.ADDRESS,Place.Field.LAT_LNG, Place.Field.ID, Place.Field.NAME))
+            val searchClose = this.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView
+            searchClose.setImageResource(R.drawable.ic_clear_search)
 
-        autocompleteFragment.setTypeFilter(TypeFilter.CITIES)
+            setOnQueryTextListener(
+                object : SearchView.OnQueryTextListener {
+                    override fun onQueryTextSubmit(textInput: String?): Boolean {
+                        textInput?.let {
+                            val motionEvent = MotionEvent.obtain(
+                                SystemClock.uptimeMillis(),
+                                SystemClock.uptimeMillis(),
+                                MotionEvent.ACTION_UP,
+                                0.0f,
+                                0.0f,
+                                0
+                            )
+                            this@apply.dispatchTouchEvent(motionEvent)
 
-        /**
-         * Changing SharedPreferences keys values and setting
-         * how autocomplete fragmen will behave
-         * */
-        // Set up a PlaceSelectionListener to handle the response.
-        autocompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
-            override fun onPlaceSelected(place: Place) {
-                var address = place.address?.removePrefix("${place.name}, ")
-                val placeCoords = place.latLng
-
-                val placeToAdd = place.id?.let { place.name?.let { it1 ->
-                    placeCoords?.latitude?.let { it2 -> Search(0, it, it1, address!!, it2, placeCoords.longitude) } } }
-
-                if(placesListViewModel.allPlaces.value?.isEmpty()!!){
-                    if (placeToAdd != null) {
-                        placesListViewModel.addPlace(placeToAdd)
-
-                        val sharedPref: SharedPreferences? = activity?.getSharedPreferences(Constants.SH_LAST_LAT_LON_KEY, Constants.PRIVATE_MODE)
-                        val editor = sharedPref?.edit()
-                        editor?.putString(Constants.SH_LAST_LAT_LON_KEY, "${placeCoords?.latitude},${placeCoords?.longitude}")
-                        editor?.putString(Constants.SH_LAST_CITY_KEY, "${place.name}")
-                        editor?.putString(Constants.SH_LAST_PLACE_ID_KEY, "${place.id}")
-                        editor?.commit()
-
-                        findNavController().navigate(R.id.action_placesList_to_currentWeather)
-                    }
-                }
-                else{
-                    var placeNotAdded: Boolean = true
-
-                    placesListViewModel.allPlaces.value?.forEach lit@{
-                        if(it.placeId == place.id){
-                            placeNotAdded = false
-                            return@lit
+                            placesListViewModel.getCityDataAdd(textInput)
                         }
+                        return false
                     }
-                    if (placeToAdd != null && placeNotAdded) {
-                        placesListViewModel.addPlace(placeToAdd)
 
-                        val sharedPref: SharedPreferences? = activity?.getSharedPreferences(Constants.SH_LAST_LAT_LON_KEY, Constants.PRIVATE_MODE)
-                        val editor = sharedPref?.edit()
-                        editor?.putString(Constants.SH_LAST_LAT_LON_KEY, "${placeCoords?.latitude},${placeCoords?.longitude}")
-                        editor?.putString(Constants.SH_LAST_CITY_KEY, "${place.name}")
-                        editor?.putString(Constants.SH_LAST_PLACE_ID_KEY, "${place.id}")
-                        editor?.commit()
-
-                        findNavController().navigate(R.id.action_placesList_to_currentWeather)
-                    }
-                    else{
-                        Toast.makeText(requireContext(), "Place already listed.", Toast.LENGTH_SHORT).show();
+                    override fun onQueryTextChange(textInput: String?): Boolean {
+                        return false
                     }
                 }
-                Log.i(TAG, "Place: ${place.address}, ${place.id}")
-            }
+            )
+        }
 
-            override fun onError(status: Status) {
-                // TODO: Handle the error.
-                Log.i(TAG, "An error occurred: $status")
+        placesListViewModel.toastMessage.observe(viewLifecycleOwner, { event ->
+            event?.getContentIfNotHandledOrReturnNull()?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
             }
-
         })
 
+        return binding.root
+
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PlacesList.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            PlacesList().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
 }

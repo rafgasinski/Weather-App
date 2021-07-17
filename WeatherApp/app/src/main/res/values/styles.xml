@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Toolbar.Style" parent="ThemeOverlay.MaterialComponents.ActionBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">?android:attr/actionBarSize</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+
+    <style name="CustomSearchView" parent="Widget.AppCompat.Light.SearchView">
+        <item name="android:background">@drawable/search_view_background</item>
+        <item name="queryBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="Toolbar.Style.NavIconAdd" parent="Toolbar.Style">
+        <item name="navigationIcon">@drawable/ic_add</item>
+        <item name="contentInsetStartWithNavigation">0dp</item>
+    </style>
+
+    <style name="CustomActionMode" parent="@style/Widget.AppCompat.ActionMode">
+        <item name="background">?colorPrimaryVariant</item>
+        <item name="android:backgroundSplit">@null</item>
+        <item name="height">?attr/actionBarSize</item>
+        <item name="titleTextStyle">@style/ActionModeTitleTextStyle</item>
+    </style>
+
+    <style name="ActionModeTitleTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionMode.Title">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Toolbar.Style.NavIconBack" parent="Toolbar.Style">
+        <item name="navigationIcon">@drawable/ic_back</item>
+        <item name="contentInsetStartWithNavigation">0dp</item>
+    </style>
+
+    <style name="CustomTextViewStyle" parent="android:Widget.TextView">
+        <item name="android:textColor">?colorControlNormal</item>
+        <item name="android:fontFamily">@font/metropolis_regular</item>
+    </style>
+
+    <style name="CustomEditTextStyle" parent="android:Widget.EditText">
+        <item name="android:textCursorDrawable">@null</item>
+        <item name="android:textColor">?colorControlNormal</item>
+        <item name="android:fontFamily">@font/metropolis_regular</item>
+    </style>
+
+</resources>

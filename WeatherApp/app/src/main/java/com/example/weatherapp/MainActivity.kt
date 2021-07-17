@@ -1,61 +1,39 @@
 package com.example.weatherapp
 
-import android.content.SharedPreferences
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.marginLeft
-import androidx.core.view.marginRight
-import androidx.core.view.marginTop
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.example.weatherapp.databinding.ActivityMainBinding
+import com.example.weatherapp.utils.PreferencesManager
 
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var navController: NavController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        PreferencesManager.init(this)
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-        var navGraph = navController.graph;
-
-        val sharedPref: SharedPreferences = applicationContext.getSharedPreferences(Constants.SH_ACCESSIBILITY_KEY, Constants.PRIVATE_MODE)
-
-        if(sharedPref.getBoolean(Constants.SH_ACCESSIBILITY_KEY, false)){
-            navGraph.startDestination = R.id.currentWeatherAccessibility;
-        }
-
-        (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment).view?.let { setMargins(it, it.marginLeft, it.marginTop, it.marginRight, getNavigationBarHeight()) }
-
-        navController.graph = navGraph;
+        navController = navHostFragment.navController
     }
 
-    private fun setMargins(view: View, left: Int, top: Int, right: Int, bottom: Int) {
-        if (view.layoutParams is ViewGroup.MarginLayoutParams) {
-            val p = view.layoutParams as ViewGroup.MarginLayoutParams
-            p.setMargins(left, top, right, bottom)
-            view.requestLayout()
+    override fun onBackPressed() {
+        if(!navController.navigateUp() && !super.onSupportNavigateUp()){
+            super.onBackPressed();
+        } else {
+            navController.navigateUp()
         }
     }
 
-    fun getNavigationBarHeight(): Int {
-        var result = 0
-        val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            result = resources.getDimensionPixelSize(resourceId)
-        }
-        return result
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp() || super.onSupportNavigateUp()
     }
-
-    fun getStatusBarHeight(): Int {
-        var result = 0
-        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            result = resources.getDimensionPixelSize(resourceId)
-        }
-        return result
-    }
-
 }
