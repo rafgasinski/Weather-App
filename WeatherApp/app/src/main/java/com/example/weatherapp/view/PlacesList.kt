@@ -9,6 +9,7 @@ import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
@@ -46,6 +47,14 @@ class PlacesList : Fragment() {
         placesListViewModel.updateList()
 
         adapterLocationsList = PlacesListAdapter(placesListViewModel, binding.searchView)
+
+        val onBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                findNavController().navigate(PlacesListDirections.actionPlacesListToCurrentWeather())
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, onBackPressedCallback)
 
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigate(PlacesListDirections.actionPlacesListToCurrentWeather())
