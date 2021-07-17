@@ -79,7 +79,7 @@ class PlacesList : Fragment() {
             adapterLocationsList.setData(placesList as ArrayList<Place>)
         })
 
-        object : ItemMoveHelper(adapterLocationsList, adapterLocationsList, binding.placesRecyclerView, binding.searchView, 180) {
+        object : ItemMoveHelper(adapterLocationsList, binding.placesRecyclerView, binding.searchView, 180) {
             override fun instantiateActionButton(
                 viewHolder: RecyclerView.ViewHolder,
                 buffer: MutableList<ActionButton>

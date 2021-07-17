@@ -22,13 +22,13 @@ import kotlin.collections.ArrayList
 
 
 @SuppressLint("ClickableViewAccessibility")
-abstract class ItemMoveHelper(var itemMovedCallback: ItemMovedCallback, private val adapter: PlacesListAdapter, private val recyclerView: RecyclerView, private val searchView: SearchView, var buttonWidth: Int) : ItemTouchHelper.Callback(){
+abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private val recyclerView: RecyclerView, private val searchView: SearchView, var buttonWidth: Int) : ItemTouchHelper.Callback(){
 
     private val preferencesManager = PreferencesManager.getInstance()
     private var buttonList: MutableList<ActionButton>? = null
     private lateinit var gestureDetector: GestureDetector
     private var swipePosition = -1
-    private var swipeThreshold = 0.4f
+    private var swipeThreshold = 0.5f
     private val buttonBuffer: MutableMap<Int, MutableList<ActionButton>>
     lateinit var removerQueue: LinkedList<Int>
 
@@ -128,7 +128,7 @@ abstract class ItemMoveHelper(var itemMovedCallback: ItemMovedCallback, private 
     }
 
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-        itemMovedCallback.onViewMoved(viewHolder.adapterPosition, target.adapterPosition)
+        adapter.onViewMoved(viewHolder.adapterPosition, target.adapterPosition)
         return true
     }
 
@@ -237,7 +237,4 @@ abstract class ItemMoveHelper(var itemMovedCallback: ItemMovedCallback, private 
         }
     }
 
-    interface ItemMovedCallback {
-        fun onViewMoved(oldPosition: Int, newPosition: Int)
-    }
 }

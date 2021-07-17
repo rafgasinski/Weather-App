@@ -23,7 +23,7 @@ import com.example.weatherapp.viewmodel.PlacesListViewModel
 import java.util.*
 
 
-class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var searchView: androidx.appcompat.widget.SearchView): RecyclerView.Adapter<PlacesListAdapter.Holder>(), ItemMoveHelper.ItemMovedCallback {
+class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var searchView: androidx.appcompat.widget.SearchView): RecyclerView.Adapter<PlacesListAdapter.Holder>() {
 
     private lateinit var mRecyclerView: RecyclerView
 
@@ -335,7 +335,7 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
         mRecyclerView = recyclerView
     }
 
-    override fun onViewMoved(oldPosition: Int, newPosition: Int) {
+    fun onViewMoved(oldPosition: Int, newPosition: Int) {
         if (oldPosition < newPosition) {
             for (i in oldPosition until newPosition) {
                 Collections.swap(placesList, i, i + 1)
