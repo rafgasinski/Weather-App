@@ -71,9 +71,6 @@ dependencies {
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
-    // Places API
-    implementation 'com.google.android.libraries.places:places:2.4.0'
-    implementation 'com.android.volley:volley:1.2.0'
     // SemiCircleProgressBar
     implementation 'com.github.hadibtf:SemiCircleArcProgressBar:1.1.1'
     // Preference Manager
