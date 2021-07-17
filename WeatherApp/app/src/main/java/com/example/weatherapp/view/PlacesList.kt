@@ -1,6 +1,5 @@
 package com.example.weatherapp.view
 
-import android.R.attr
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle

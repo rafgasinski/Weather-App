@@ -22,7 +22,7 @@ import kotlin.collections.ArrayList
 
 
 @SuppressLint("ClickableViewAccessibility")
-abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private val recyclerView: RecyclerView, private val searchView: SearchView, var buttonWidth: Int) : ItemTouchHelper.Callback(){
+abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private val recyclerView: RecyclerView, searchView: SearchView, private var buttonWidth: Int) : ItemTouchHelper.Callback(){
 
     private val preferencesManager = PreferencesManager.getInstance()
     private var buttonList: MutableList<ActionButton>? = null
@@ -30,7 +30,7 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
     private var swipePosition = -1
     private var swipeThreshold = 0.5f
     private val buttonBuffer: MutableMap<Int, MutableList<ActionButton>>
-    lateinit var removerQueue: LinkedList<Int>
+    private lateinit var removerQueue: LinkedList<Int>
 
     abstract fun instantiateActionButton(viewHolder: RecyclerView.ViewHolder, buffer: MutableList<ActionButton>)
 
@@ -128,7 +128,7 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
     }
 
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-        adapter.onViewMoved(viewHolder.adapterPosition, target.adapterPosition)
+        adapter.onViewMoved(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
         return true
     }
 
@@ -141,7 +141,7 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-        val pos = viewHolder.adapterPosition
+        val pos = viewHolder.bindingAdapterPosition
 
         if(swipePosition != pos) {
             removerQueue.add(swipePosition)
@@ -199,7 +199,7 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
         actionState: Int,
         isCurrentlyActive: Boolean
     ) {
-        val pos = viewHolder.adapterPosition
+        val pos = viewHolder.bindingAdapterPosition
         var translationX = dX
 
         val itemView = viewHolder.itemView
@@ -220,7 +220,7 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
                     buffer = buttonBuffer[pos]!!
                 }
 
-                translationX = dX * buffer.size.toFloat() * buttonWidth.toFloat() / itemView.width
+                translationX = dX * buffer.size.toFloat() * buttonWidth.toFloat() / itemView.width * 1.1f
                 drawButton(c, itemView, buffer, translationX, pos)
             }
         }

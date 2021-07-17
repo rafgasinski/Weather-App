@@ -20,7 +20,7 @@ class PlacesListViewModel(application: Application): AndroidViewModel(applicatio
 
     val toastMessage = MutableLiveData<Event<String>>()
     val allPlacesLiveData = MutableLiveData<List<Place>>()
-    var maxOrder = 0
+    private var maxOrder = 0
 
     private var allPlaces: List<Place> = listOf()
 

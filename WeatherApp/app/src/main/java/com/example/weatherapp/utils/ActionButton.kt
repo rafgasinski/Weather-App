@@ -9,10 +9,19 @@ import androidx.core.content.ContextCompat
 import com.example.weatherapp.R
 
 
-class ActionButton(private val context: Context, private val drawableId: Int, private val listener: ActionButtonClickListener) {
+class ActionButton(context: Context, drawableId: Int, private val listener: ActionButtonClickListener) {
 
     private var pos = 0
     private var clickRegion: RectF? = null
+    private var d: Drawable? = null
+    private val p = Paint()
+
+    init {
+        val value = TypedValue()
+        context.theme.resolveAttribute(R.attr.colorPrimaryDark, value, true)
+        p.color = value.data
+        d = ContextCompat.getDrawable(context, drawableId)
+    }
 
     fun onClick(x: Float, y: Float) : Boolean {
         if(clickRegion != null && clickRegion!!.contains(x, y)){
@@ -23,16 +32,10 @@ class ActionButton(private val context: Context, private val drawableId: Int, pr
 
     fun onDraw(c: Canvas, rectF: RectF, pos: Int) {
 
-        val p = Paint()
-        val value = TypedValue()
-        context.theme.resolveAttribute(R.attr.colorPrimaryDark, value, true)
-        p.color = value.data
-
         c.drawRect(rectF, p)
 
-        val d = ContextCompat.getDrawable(context, drawableId)
         val bitmap = drawableToBitmap(d)
-        c.drawBitmap(bitmap, (rectF.left + 26f + rectF.right)/2-bitmap.width /2, (rectF.top + rectF.bottom)/2-bitmap.height /2, p)
+        c.drawBitmap(bitmap, (rectF.left + 30f + rectF.right)/2-bitmap.width /2, (rectF.top + rectF.bottom)/2-bitmap.height /2, p)
 
         this.pos = pos
         clickRegion = rectF

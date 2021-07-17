@@ -51,8 +51,6 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
     inner class Holder(private val binding: ItemPlaceBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        var actionModeEnabledHolder = actionModeEnabled
-
         @SuppressLint("ClickableViewAccessibility")
         fun bind(place: Place, context: Context) {
             binding.placeName.text = place.name
@@ -251,7 +249,7 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
                         }
 
                         actionMode = (v?.context as AppCompatActivity).startActionMode(callback)
-                        searchView.animate().setDuration(300).alpha(0.5f).withStartAction() {
+                        searchView.animate().setDuration(300).alpha(0.5f).withStartAction {
                             enableSearchView(searchView, false)
                         }
                     } else {

@@ -1,7 +1,6 @@
 package com.example.weatherapp.utils
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.widget.ImageView
 import com.example.weatherapp.R
 import java.math.BigDecimal
@@ -17,26 +16,6 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 private val preferencesManager = PreferencesManager.getInstance()
-
-fun getStatusBarHeight(context: Context): Int {
-    var result = 0
-    val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
-
-    if (resourceId > 0){
-        result = context.resources.getDimensionPixelSize(resourceId)
-    }
-    return result
-}
-
-fun getNavigationBarHeight(context: Context): Int {
-    var result = 0
-    val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-
-    if (resourceId > 0){
-        result = context.resources.getDimensionPixelSize(resourceId)
-    }
-    return result
-}
 
 fun timeFormat(value: Int, givenTimeZone: String): String {
     val zoneId: ZoneId = ZoneId.of(givenTimeZone)
@@ -145,8 +124,7 @@ fun updateIcon(iconCode: String?, imageView: ImageView){
 
 open class Event<out T>(private val content: T) {
 
-    var hasBeenHandled = false
-        private set
+    private var hasBeenHandled = false
 
     fun getContentIfNotHandledOrReturnNull(): T? {
         return if (hasBeenHandled) {
