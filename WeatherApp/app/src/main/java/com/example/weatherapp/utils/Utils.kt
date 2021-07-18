@@ -10,9 +10,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.math.abs
@@ -86,10 +84,23 @@ fun getSunProgress(currentTime: Int, sunrise: Int, sunset: Int) : Int {
     val sunriseNowDiff = ((currentTime - sunrise) / 60).toDouble()
     val sunsetSunriseDiff = ((sunset - sunrise) / 60).toDouble()
 
-    return if(currentTime in (sunrise + 1) until sunset) {
-        ((sunriseNowDiff / sunsetSunriseDiff) * 100).toInt()
-    } else {
-        0
+    val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+    val day =  Date(currentTime.toLong().times(1000))
+
+    val localDate = LocalDate.parse(sdf.format(day))
+    val dayEnd = LocalDateTime.of(localDate, LocalTime.MAX)
+    val dayEndUnix = dayEnd.atZone(ZoneId.systemDefault()).toEpochSecond()
+
+    return when(currentTime) {
+        in (sunrise + 1) until sunset -> {
+            ((sunriseNowDiff / sunsetSunriseDiff) * 100).toInt()
+        }
+
+        in (sunset + 1) until dayEndUnix -> {
+            100
+        }
+
+        else -> 0
     }
 }
 
