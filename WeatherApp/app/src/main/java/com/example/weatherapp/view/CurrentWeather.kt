@@ -170,8 +170,10 @@ class CurrentWeather : Fragment() {
 
         binding.scrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, _ ->
             if(scrollY == 0){
+                binding.refreshLayout.isEnabled = true
                 binding.currentWeatherCard.visibility = View.INVISIBLE
             } else {
+                binding.refreshLayout.isEnabled = false
                 binding.currentWeatherCard.visibility = View.VISIBLE
             }
         })

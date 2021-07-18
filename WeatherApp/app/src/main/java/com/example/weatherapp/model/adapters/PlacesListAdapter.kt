@@ -303,6 +303,11 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
     }
 
     fun setData(data: ArrayList<Place>) {
+        if(placesList.isEmpty()){
+            mRecyclerView.alpha = 0f
+            mRecyclerView.animate().setDuration(600).alpha(1f)
+        }
+
         if(data.size > placesList.size) {
             mRecyclerView.smoothScrollToPosition(0)
         }

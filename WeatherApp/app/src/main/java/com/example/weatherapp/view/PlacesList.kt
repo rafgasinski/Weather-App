@@ -70,6 +70,10 @@ class PlacesList : Fragment() {
             findNavController().navigateUp()
         }
 
+        binding.placesRecyclerView.apply {
+            adapter = adapterLocationsList
+        }
+
         if(resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 activity?.window?.insetsController?.setSystemBarsAppearance(WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
@@ -102,12 +106,6 @@ class PlacesList : Fragment() {
                         })
                 )
             }
-        }
-
-        binding.placesRecyclerView.apply {
-            adapter = adapterLocationsList
-            alpha = 0f
-            animate().setDuration(600).alpha(1f)
         }
 
         binding.searchView.apply {
