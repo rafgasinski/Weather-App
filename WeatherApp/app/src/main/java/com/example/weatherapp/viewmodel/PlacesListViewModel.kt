@@ -10,9 +10,11 @@ import com.example.weatherapp.model.db.Place
 import com.example.weatherapp.model.repositories.ApiRepository
 import com.example.weatherapp.model.repositories.PlacesRepository
 import com.example.weatherapp.utils.Event
+import com.example.weatherapp.utils.isOnline
 import kotlinx.coroutines.*
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collect
+import java.io.IOException
 
 class PlacesListViewModel(application: Application): AndroidViewModel(application) {
     private val forecastRepository = ApiRepository()
@@ -20,6 +22,9 @@ class PlacesListViewModel(application: Application): AndroidViewModel(applicatio
 
     val toastMessage = MutableLiveData<Event<String>>()
     val allPlacesLiveData = MutableLiveData<List<Place>>()
+
+    var listToUpdate = true
+
     private var maxOrder = 0
 
     private var allPlaces: List<Place> = listOf()
@@ -43,11 +48,15 @@ class PlacesListViewModel(application: Application): AndroidViewModel(applicatio
                 allPlaces = repository.selectAll()
             }.join()
 
-            allPlaces.forEachIndexed { index, place ->
-                if(index == 0){
-                    maxOrder = place.order
+            if(isOnline(getApplication<Application>())) {
+                allPlaces.forEachIndexed { index, place ->
+                    if(index == 0){
+                        maxOrder = place.order
+                    }
+                    getCityDataUpdate(place.name, place.id, place.order)
                 }
-                getCityDataUpdate(place.name, place.id, place.order)
+
+                listToUpdate = false
             }
         }
     }
@@ -84,43 +93,57 @@ class PlacesListViewModel(application: Application): AndroidViewModel(applicatio
 
     fun getCityDataAdd(name: String) {
         viewModelScope.launch {
-            val response = forecastRepository.getCityData(name)
-            if(response.isSuccessful) {
-                val responseBody = response.body()!!
-                var isDay = false
+            try {
+                if(isOnline(getApplication<Application>())) {
+                    val response = forecastRepository.getCityData(name)
+                    if(response.isSuccessful) {
+                        val responseBody = response.body()!!
 
-                if(responseBody.weather[0].icon.last().toString() == "d") {
-                    isDay = true
-                }
+                        val isDay = responseBody.weather[0].icon.last().toString() == "d"
 
-                val cityCountry = String.format(getApplication<Application>().resources.getString(R.string.place_country), responseBody.name, responseBody.sys.countryCode)
-                if(allPlacesLiveData.value?.any { it.name == cityCountry} == false) {
-                    addPlace(Place(0, cityCountry, responseBody.coord.lat, responseBody.coord.lon, responseBody.main.temp.roundToInt(),
-                        responseBody.main.tempMax.roundToInt(), responseBody.main.tempMin.roundToInt(), isDay, ++maxOrder))
+                        val cityCountry = String.format(getApplication<Application>().resources.getString(R.string.place_country), responseBody.name, responseBody.sys.countryCode)
+                        if(allPlacesLiveData.value?.any { it.name == cityCountry} == false) {
+                            addPlace(Place(0, cityCountry, responseBody.coord.lat, responseBody.coord.lon, responseBody.main.temp.roundToInt(),
+                                responseBody.main.tempMax.roundToInt(), responseBody.main.tempMin.roundToInt(), isDay, ++maxOrder))
+                        } else {
+                            toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.already_added)))
+                        }
+                    } else {
+                        toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.unknown_location)))
+                    }
                 } else {
-                    toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.already_added)))
+                    toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.no_network_connection)))
                 }
-            } else {
-                toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.unknown_location)))
+            } catch(t: Throwable) {
+                when(t) {
+                    is IOException -> toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.network_failure)))
+                    else -> toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.unknown_error)))
+                }
+
             }
         }
     }
 
     private fun getCityDataUpdate(name: String, id: Int, order: Int) {
         viewModelScope.launch {
-            val response = forecastRepository.getCityData(name)
+            try {
+                if(isOnline(getApplication<Application>())) {
+                    val response = forecastRepository.getCityData(name)
 
-            if(response.isSuccessful) {
-                val responseBody = response.body()!!
+                    if(response.isSuccessful) {
+                        val responseBody = response.body()!!
 
-                var isDay = false
+                        val isDay = responseBody.weather[0].icon.last().toString() == "d"
 
-                if(responseBody.weather[0].icon.last().toString() == "d") {
-                    isDay = true
+                        update(Place(id, name, responseBody.coord.lat, responseBody.coord.lon, responseBody.main.temp.roundToInt(),
+                            responseBody.main.tempMax.roundToInt(), responseBody.main.tempMin.roundToInt(), isDay, order))
+                    }
                 }
-
-                update(Place(id, name, responseBody.coord.lat, responseBody.coord.lon, responseBody.main.temp.roundToInt(),
-                    responseBody.main.tempMax.roundToInt(), responseBody.main.tempMin.roundToInt(), isDay, order))
+            } catch(t: Throwable) {
+                when(t) {
+                    is IOException -> toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.network_failure)))
+                    else -> toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.unknown_error)))
+                }
             }
         }
     }

@@ -64,7 +64,7 @@ class PreferencesManager private constructor(context: Context) :
         }
 
     var useBackgroundDay: Boolean
-        get() = sharedPrefs.getBoolean(KEY_USE_BACKGROUND_DAY, false)
+        get() = sharedPrefs.getBoolean(KEY_USE_BACKGROUND_DAY, true)
 
         set(value) {
             sharedPrefs.edit {

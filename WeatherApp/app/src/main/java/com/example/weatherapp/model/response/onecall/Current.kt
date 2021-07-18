@@ -6,8 +6,6 @@ import com.google.gson.annotations.SerializedName
 data class Current(
     @SerializedName("clouds")
         val clouds: Double,
-    @SerializedName("dew_point")
-        val dewPoint: Double,
     @SerializedName("dt")
         val dt: Int,
     @SerializedName("feels_like")
@@ -24,8 +22,6 @@ data class Current(
         val temp: Double,
     @SerializedName("uvi")
         val uvi: Double,
-    @SerializedName("visibility")
-        val visibility: Int,
     @SerializedName("weather")
         val weather: List<Weather>,
     @SerializedName("wind_deg")

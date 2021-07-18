@@ -7,6 +7,11 @@
     <string name="select_all">Select All</string>
     <string name="selected">Selected</string>
     <string name="unknown_location">Unknown location</string>
+    <string name="no_network_connection">Can\'t connect to the network</string>
+    <string name="network_failure">Network failure</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="outdated_data">Outdated weather data</string>
+    <string name="retry">Retry</string>
     <string name="already_added">Location already added</string>
     <string name="add_location">Add location</string>
     <string name="weather_icon">Weather Icon</string>

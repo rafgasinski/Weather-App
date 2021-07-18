@@ -25,4 +25,16 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
     }
 
+    override fun onBackPressed() {
+        if(!navController.navigateUp() && !super.onSupportNavigateUp()){
+            super.onBackPressed();
+        } else {
+            navController.navigateUp()
+        }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp() || super.onSupportNavigateUp()
+    }
+
 }

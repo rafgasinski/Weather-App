@@ -44,15 +44,15 @@ interface OpenWeatherApi {
             }
 
             val okHttpClient = OkHttpClient.Builder()
-                    .addInterceptor(requestInterceptor)
-                    .build()
+                .addInterceptor(requestInterceptor)
+                .build()
 
             return Retrofit.Builder()
-                    .client(okHttpClient)
-                    .baseUrl(Constants.BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                    .create(OpenWeatherApi::class.java)
+                .client(okHttpClient)
+                .baseUrl(Constants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(OpenWeatherApi::class.java)
         }
     }
 }

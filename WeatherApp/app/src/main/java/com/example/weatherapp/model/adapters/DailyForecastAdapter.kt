@@ -17,12 +17,12 @@ class DailyForecastAdapter(private val dailyForecastList: List<Daily>): Recycler
         fun bind(daily: Daily, context: Context) {
             updateIcon(daily.weather[0].icon, binding.forecastIcon)
 
-            val tempDay = daily.temp.day.roundToInt()
-            val tempNight = daily.temp.night.roundToInt()
+            val tempMax = daily.temp.max.roundToInt()
+            val tempMin = daily.temp.min.roundToInt()
 
             binding.weatherDescription.text = daily.weather[0].description.capitalizeFirst
             binding.dayWeek.text = getDayOfWeek(daily.dt)
-            binding.temps.text = String.format(context.resources.getString(R.string.decimal_val_temps), tempDay, tempNight)
+            binding.temps.text = String.format(context.resources.getString(R.string.decimal_val_temps), tempMax, tempMin)
         }
 
     }

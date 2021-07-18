@@ -1,6 +1,9 @@
 package com.example.weatherapp.utils
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities.*
 import android.widget.ImageView
 import com.example.weatherapp.R
 import java.math.BigDecimal
@@ -15,7 +18,8 @@ import java.util.*
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-private val preferencesManager = PreferencesManager.getInstance()
+
+val preferencesManager = PreferencesManager.getInstance()
 
 fun timeFormat(value: Int, givenTimeZone: String): String {
     val zoneId: ZoneId = ZoneId.of(givenTimeZone)
@@ -78,6 +82,17 @@ fun convertCoordinates(latitude: Double, longitude: Double) : String {
     return "${abs(latDegrees)}°$latMinutes'$latSeconds\" $latDirection, ${abs(longDegrees)}°$longMinutes'$longSeconds\" $lonDirection"
 }
 
+fun getSunProgress(currentTime: Int, sunrise: Int, sunset: Int) : Int {
+    val sunriseNowDiff = ((currentTime - sunrise) / 60).toDouble()
+    val sunsetSunriseDiff = ((sunset - sunrise) / 60).toDouble()
+
+    return if(currentTime in (sunrise + 1) until sunset) {
+        ((sunriseNowDiff / sunsetSunriseDiff) * 100).toInt()
+    } else {
+        0
+    }
+}
+
 fun updateIcon(iconCode: String?, imageView: ImageView){
     val newIconCode = iconCode
         ?.replace("n","")
@@ -120,6 +135,29 @@ fun updateIcon(iconCode: String?, imageView: ImageView){
         }
 
     }
+}
+
+fun isOnline(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+    val activeNetwork = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+
+    return when {
+        capabilities.hasTransport(TRANSPORT_WIFI) -> true
+        capabilities.hasTransport(TRANSPORT_CELLULAR) -> true
+        capabilities.hasTransport(TRANSPORT_ETHERNET) -> true
+        else -> false
+    }
+}
+
+sealed class Resource<T>(
+    val data: T? = null,
+    val message: Event<String>? = null
+) {
+    class Success<T>(data: T) : Resource<T>(data)
+    class Error<T>(message: Event<String>, data: T? = null) : Resource<T>(data, message)
+    class Loading<T> : Resource<T>()
 }
 
 open class Event<out T>(private val content: T) {

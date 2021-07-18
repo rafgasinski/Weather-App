@@ -1,65 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".view.CurrentWeather">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="weather"
             type="com.example.weatherapp.model.data.WeatherData"/>
     </data>
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/coordinator_layout"
+    <RelativeLayout
+        android:id="@+id/main_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        tools:background="@drawable/gradient_background_day">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/main_layout"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            style="@style/Toolbar.Style.NavIconAdd"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:menu="@menu/menu_current_weather"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:singleLine="true"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                tools:text="Warsaw" />
+
+        </com.google.android.material.appbar.MaterialToolbar>
+
+        <ProgressBar
+            android:id="@+id/progress_bar_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?android:attr/progressBarStyleSmall"
+            android:indeterminate="true"
+            android:visibility="gone"
+            android:indeterminateTintMode="src_atop"
+            android:indeterminateTint="@color/progress_bar"
+            android:layout_below="@id/toolbar"
+            android:layout_centerHorizontal="true"/>
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/refresh_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fitsSystemWindows="true"
-            android:visibility="visible"
-            tools:visibility="visible"
-            tools:background="@drawable/gradient_background_day">
-
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolbar"
-                style="@style/Toolbar.Style.NavIconAdd"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-                app:menu="@menu/menu_current_weather"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <TextView
-                    android:id="@+id/toolbar_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:paddingStart="2dp"
-                    android:paddingEnd="2dp"
-                    android:singleLine="true"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:textSize="20sp"
-                    tools:text="Warsaw" />
-
-            </com.google.android.material.appbar.MaterialToolbar>
-
-            <ProgressBar
-                android:id="@+id/progress_bar_location"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="?android:attr/progressBarStyleSmall"
-                android:indeterminate="true"
-                android:indeterminateTintMode="src_atop"
-                android:indeterminateTint="@color/progress_bar"
-                app:layout_constraintTop_toBottomOf="@id/toolbar"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:layout_below="@id/toolbar"
+            android:layout_centerHorizontal="true">
 
             <androidx.core.widget.NestedScrollView
                 android:id="@+id/scroll_view"
@@ -67,13 +66,10 @@
                 android:layout_height="0dp"
                 android:visibility="invisible"
                 app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-                app:layout_constraintTop_toBottomOf="@id/toolbar"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
                 tools:visibility="visible">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/constraint_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
@@ -401,9 +397,34 @@
 
             </androidx.core.widget.NestedScrollView>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <TextView
+            android:id="@+id/error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:gravity="center"
+            android:textSize="24sp"/>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/refresh_button"
+            android:layout_width="120dp"
+            android:layout_height="56dp"
+            app:cornerRadius="16dp"
+            android:backgroundTint="@color/accent"
+            android:layout_below="@id/error"
+            android:layout_marginTop="12dp"
+            android:layout_centerInParent="true"
+            android:text="@string/retry"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:visibility="gone"/>
+
+    </RelativeLayout>
 
 </layout>

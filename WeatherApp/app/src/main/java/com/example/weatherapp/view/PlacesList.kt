@@ -1,14 +1,11 @@
 package com.example.weatherapp.view
 
 import android.content.res.Configuration
-import android.os.Build
-import android.os.Bundle
-import android.os.SystemClock
+import android.os.*
 import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
@@ -22,6 +19,7 @@ import com.example.weatherapp.model.adapters.PlacesListAdapter
 import com.example.weatherapp.model.db.Place
 import com.example.weatherapp.utils.ActionButton
 import com.example.weatherapp.utils.ActionButtonClickListener
+import com.example.weatherapp.utils.NetworkConnectionListener
 import com.example.weatherapp.viewmodel.PlacesListViewModel
 import java.util.*
 
@@ -35,6 +33,20 @@ class PlacesList : Fragment() {
 
     private lateinit var adapterLocationsList: PlacesListAdapter
 
+    private lateinit var networkConnection: NetworkConnectionListener
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    override fun onStop() {
+        super.onStop()
+        placesListViewModel.listToUpdate = true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -43,20 +55,19 @@ class PlacesList : Fragment() {
 
         placesListViewModel = ViewModelProvider(requireActivity()).get(PlacesListViewModel::class.java)
 
-        placesListViewModel.updateList()
-
         adapterLocationsList = PlacesListAdapter(placesListViewModel, binding.searchView)
 
-        val onBackPressedCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                findNavController().navigate(PlacesListDirections.actionPlacesListToCurrentWeather())
+        networkConnection = NetworkConnectionListener(requireContext())
+        networkConnection.observe(viewLifecycleOwner, { connected ->
+            if(connected && placesListViewModel.listToUpdate) {
+                handler.postDelayed({
+                    placesListViewModel.updateList()
+                }, 200)
             }
-        }
-
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, onBackPressedCallback)
+        })
 
         binding.toolbar.setNavigationOnClickListener {
-            findNavController().navigate(PlacesListDirections.actionPlacesListToCurrentWeather())
+            findNavController().navigateUp()
         }
 
         if(resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO) {
@@ -70,7 +81,6 @@ class PlacesList : Fragment() {
                 } else {
                     View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                 }
-
             }
         }
 
@@ -89,7 +99,6 @@ class PlacesList : Fragment() {
                             override fun onClick(pos: Int) {
                                 adapterLocationsList.deleteItem(pos)
                             }
-
                         })
                 )
             }

@@ -1,66 +1,51 @@
 package com.example.weatherapp.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.weatherapp.model.data.WeatherData
+import android.app.Application
+import androidx.lifecycle.*
+import com.example.weatherapp.R
 import com.example.weatherapp.model.repositories.ApiRepository
 import com.example.weatherapp.model.response.onecall.OneCallResponse
 import com.example.weatherapp.utils.*
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
+import retrofit2.Response
+import java.io.IOException
 
-class ForecastViewModel : ViewModel() {
+class ForecastViewModel(application: Application): AndroidViewModel(application) {
     private val forecastRepository = ApiRepository()
 
-    val responseData: MutableLiveData<OneCallResponse?> = MutableLiveData()
-
-    private val mWeatherData = MutableLiveData<WeatherData>()
-    val weatherData: LiveData<WeatherData> get() = mWeatherData
-
-    private val preferencesManager = PreferencesManager.getInstance()
+    val responseData: MutableLiveData<Resource<OneCallResponse>> = MutableLiveData()
 
     fun getOneCallForecast(lat: String, lon: String) {
         viewModelScope.launch {
-            val response = forecastRepository.getOneCall(lat, lon)
-
-            if(response.isSuccessful){
-                responseData.value = response.body()!!
-
-                val responseBody = response.body()!!
-                val currentData = responseBody.current
-
-                preferencesManager.timeZone = responseBody.timezone
-
-                val currentTime = currentData.dt
-                val sunrise = currentData.sunrise
-                val sunset = currentData.sunset
-
-                val sunriseNowDiff = ((currentTime - sunrise) / 60).toDouble()
-                val sunsetSunriseDiff = ((sunset - sunrise) / 60).toDouble()
-
-                val sunProgress = if(currentTime in (sunrise + 1) until sunset) {
-                        ((sunriseNowDiff / sunsetSunriseDiff) * 100).toInt()
-                } else {
-                    0
-                }
-
-                mWeatherData.postValue(WeatherData(
-                    currentData.temp.roundToInt().toString(),
-                    currentData.weather[0].description.capitalizeFirst,
-                    timeFormat(currentData.sunrise, responseBody.timezone),
-                    timeFormat(currentData.sunset, responseBody.timezone),
-                    round(currentData.feelsLike),
-                    currentData.clouds.roundToInt().toString(),
-                    convertWindUnit(currentData.windSpeed),
-                    currentData.humidity.toString(),
-                    currentData.pressure.toString(),
-                    currentData.uvi.roundToInt().toString(),
-                    sunProgress
-                ))
-
-            }
+            safeApiCall(lat, lon)
         }
     }
+
+    private suspend fun safeApiCall(lat: String, lon: String) {
+        responseData.postValue(Resource.Loading())
+        try {
+            if(isOnline(getApplication<Application>())) {
+                val response = forecastRepository.getOneCall(lat, lon)
+                responseData.postValue(handleResponse(response))
+            } else {
+                responseData.postValue(Resource.Error(Event(getApplication<Application>().resources.getString(R.string.no_network_connection))))
+            }
+        } catch(t: Throwable) {
+            when(t) {
+                is IOException -> responseData.postValue(Resource.Error(Event(getApplication<Application>().resources.getString(R.string.network_failure))))
+                else -> responseData.postValue(Resource.Error(Event(getApplication<Application>().resources.getString(R.string.unknown_error))))
+            }
+
+        }
+    }
+
+    private fun handleResponse(response: Response<OneCallResponse>) : Resource<OneCallResponse> {
+        if(response.isSuccessful) {
+            response.body()?.let { resultResponse ->
+                return Resource.Success(resultResponse)
+            }
+        }
+        return Resource.Error(Event(response.message()))
+    }
+
 }
