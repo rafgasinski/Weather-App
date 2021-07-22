@@ -13,13 +13,13 @@
     <color name="sun">#ffd54f</color>
     <color name="sun_outline">#ffb74d</color>
     <color name="cloud">#e3e3e3</color>
-    <color name="cloud_back_day">#737373</color>
+    <color name="cloud_back_day">#707070</color>
     <color name="cloud_back_night">#7c7c7c</color>
     <color name="cloud_dark">#929292</color>
     <color name="rain_day">#a7e1fb</color>
     <color name="rain_night">#4fc3f7</color>
     <color name="snow">#e6e6e6</color>
-    <color name="gradient_day_start">#5d97d9</color>
+    <color name="gradient_day_start">#5488c3</color>
     <color name="gradient_day_end">#2f71ba</color>
     <color name="gradient_night_start">#141e30</color>
     <color name="gradient_night_end">#243b55</color>
