@@ -1,4 +1,4 @@
-package com.example.weatherapp.utils
+package com.example.weatherapp.utils.widgets
 
 import android.content.Context
 import android.graphics.*

@@ -15,64 +15,59 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.weatherapp.R
-import com.example.weatherapp.databinding.ItemPlaceBinding
-import com.example.weatherapp.model.db.Place
-import com.example.weatherapp.utils.CheckableImageView
-import com.example.weatherapp.utils.PreferencesManager
-import com.example.weatherapp.viewmodel.PlacesListViewModel
+import com.example.weatherapp.databinding.ItemLocationBinding
+import com.example.weatherapp.model.db.location.Location
+import com.example.weatherapp.utils.widgets.CheckableImageView
+import com.example.weatherapp.utils.preferencesManager
+import com.example.weatherapp.viewmodel.LocationsListViewModel
 import java.util.*
 
 
-class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var searchView: androidx.appcompat.widget.SearchView): RecyclerView.Adapter<PlacesListAdapter.Holder>() {
+class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, val searchView: androidx.appcompat.widget.SearchView): RecyclerView.Adapter<LocationsListAdapter.Holder>() {
 
     private lateinit var mRecyclerView: RecyclerView
 
-    var placesList: ArrayList<Place> = arrayListOf()
+    var locationsList: ArrayList<Location> = arrayListOf()
 
     var actionModeEnabled = false
     var allSelected = false
     var actionMode: ActionMode? = null
 
-    var firstClickedItem: Place? = null
+    var firstClickedItem: Location? = null
     var itemClicked = false
-    var actionModeFinished = false
 
-    var selectedList = arrayListOf<Place>()
+    var selectedList = arrayListOf<Location>()
 
     val selectedListSize = MutableLiveData(0)
 
     private var touchHelper: ItemTouchHelper? = null
 
-    private val preferencesManager = PreferencesManager.getInstance()
-
     private val currentCity = preferencesManager.city
     private val currentCountryCode = preferencesManager.countryCode
 
-    inner class Holder(private val binding: ItemPlaceBinding) :
+    inner class Holder(private val binding: ItemLocationBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         @SuppressLint("ClickableViewAccessibility")
-        fun bind(place: Place, context: Context) {
-            binding.placeName.text = place.name
-            binding.temps.text = String.format(context.resources.getString(R.string.decimal_val_temps), place.tempMax, place.tempMin)
-            binding.placeCurrentTemp.text = String.format(context.resources.getString(R.string.decimal_val_degree), place.currentTemp)
+        fun bind(location: Location, context: Context) {
+            binding.location = location
 
             binding.root.background =
-                if (place.isDay) {
-                    ContextCompat.getDrawable(context, R.drawable.round_corners_place_day)
+                if (location.isDay) {
+                    ContextCompat.getDrawable(context, R.drawable.round_corners_day)
                 } else {
-                    ContextCompat.getDrawable(context, R.drawable.round_corners_place_night)
+                    ContextCompat.getDrawable(context, R.drawable.round_corners_night)
                 }
 
-            if (place.name == String.format(context.resources.getString(R.string.place_country), currentCity, currentCountryCode)) {
-                binding.placeName.setCompoundDrawablesWithIntrinsicBounds(
+            if (location.city == currentCity && location.countryCode == currentCountryCode) {
+                binding.locationName.setCompoundDrawablesWithIntrinsicBounds(
                     null,
                     null,
-                    ContextCompat.getDrawable(context, R.drawable.ic_location),
+                    ContextCompat.getDrawable(context, R.drawable.ic_current_selected),
                     null
                 )
             } else {
-                binding.placeName.setCompoundDrawablesWithIntrinsicBounds(
+                binding.locationName.setCompoundDrawablesWithIntrinsicBounds(
                     null,
                     null,
                     null,
@@ -111,28 +106,28 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
                 binding.checkbox.isChecked = allSelected
 
                 if(firstClickedItem != null && itemClicked) {
-                    if(place == firstClickedItem){
-                        clickItem(binding.checkbox, place)
+                    if(location == firstClickedItem){
+                        clickItem(binding.checkbox, location)
                         itemClicked = false
                     }
                 }
-
             } else {
                 binding.checkbox.isChecked = false
                 binding.checkbox.visibility = View.GONE
                 binding.dragHandle.visibility = View.GONE
             }
 
-            binding.root.setOnClickListener { x ->
+            binding.root.setOnClickListener { view ->
                 if (actionModeEnabled) {
-                    clickItem(binding.checkbox, place)
+                    clickItem(binding.checkbox, location)
                 } else {
-                    preferencesManager.city = place.name.split(",")[0]
-                    preferencesManager.countryCode = place.name.split(",")[1].trim()
-                    preferencesManager.lat = place.lat.toString()
-                    preferencesManager.lon = place.lon.toString()
+                    preferencesManager.locationId = location.id
+                    preferencesManager.city = location.city
+                    preferencesManager.countryCode = location.countryCode
+                    preferencesManager.lat = location.lat
+                    preferencesManager.lon = location.lon
 
-                    x.findNavController().navigate(R.id.action_placesList_to_currentWeather)
+                    view.findNavController().navigate(R.id.action_locationsList_to_currentWeather)
                 }
             }
 
@@ -140,24 +135,23 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
                 override fun onLongClick(v: View?): Boolean {
                     if(!actionModeEnabled) {
                         actionModeEnabled = true
-                        actionModeFinished = false
-                        preferencesManager.isSwipeEnabled = false
 
                         val callback = object : ActionMode.Callback {
                             override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-                                mode?.menuInflater?.inflate(R.menu.menu_places_list, menu)
+                                mode?.menuInflater?.inflate(R.menu.menu_locations_list, menu)
                                 return true
                             }
 
                             override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-                                firstClickedItem = place
+                                firstClickedItem = location
                                 itemClicked = true
                                 notifyDataSetChanged()
 
                                 selectedListSize.observe(context as LifecycleOwner, {
-                                    mode?.title = String.format(context.resources.getString(R.string.decimal_selected), it)
+                                    mode?.title = String.format(context.resources.getString(R.string.val_selected), it)
                                     val menuDeleteItem = menu?.findItem(R.id.delete)
                                     val menuSelectAllItem = menu?.findItem(R.id.select_all)
+
                                     if(it > 0) {
                                         menuDeleteItem?.icon?.mutate()?.alpha = 255
                                         menuDeleteItem?.isEnabled = true
@@ -189,16 +183,14 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
                             override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
                                 when(item?.itemId) {
                                     R.id.select_all -> {
-                                        if(selectedList.size == placesList.size) {
+                                        if(selectedList.size == locationsList.size) {
                                             allSelected = false
                                             selectedList.clear()
-
                                             selectedListSize.postValue(0)
                                         } else {
                                             allSelected = true
                                             selectedList.clear()
-                                            selectedList.addAll(placesList)
-
+                                            selectedList.addAll(locationsList)
                                             selectedListSize.postValue(selectedList.size)
                                         }
 
@@ -206,12 +198,7 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
                                     }
 
                                     R.id.delete -> {
-                                        val toDeleteListId = arrayListOf<Int>()
-                                        selectedList.forEach {
-                                            toDeleteListId.add(it.id)
-                                        }
-
-                                        placesListViewModel.deleteMultiple(toDeleteListId)
+                                        locationsListViewModel.deleteMultiple(selectedList)
 
                                         allSelected = false
                                         selectedList.clear()
@@ -224,24 +211,14 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
 
                             override fun onDestroyActionMode(mode: ActionMode?) {
                                 actionModeEnabled = false
-                                actionModeFinished = true
                                 allSelected = false
 
                                 selectedList.clear()
-
-                                selectedListSize.postValue(selectedList.size)
-                                preferencesManager.isSwipeEnabled = true
+                                selectedListSize.postValue(0)
 
                                 searchView.animate().setDuration(300).alpha(1f).withStartAction {
                                     enableSearchView(searchView, true)
                                 }
-
-                                val colorControl = TypedValue()
-                                context.theme.resolveAttribute(
-                                    R.attr.colorControlNormal,
-                                    colorControl,
-                                    true
-                                )
 
                                 notifyDataSetChanged()
                             }
@@ -272,26 +249,26 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
-        val binding = ItemPlaceBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemLocationBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return Holder(binding)
 
     }
 
     override fun getItemCount(): Int {
-        return placesList.size
+        return locationsList.size
     }
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
-        holder.bind(placesList[position], holder.itemView.context)
+        holder.bind(locationsList[position], holder.itemView.context)
     }
 
-    private fun clickItem(checkbox: CheckableImageView, place: Place) {
+    private fun clickItem(checkbox: CheckableImageView, location: Location) {
         if(checkbox.isChecked) {
             checkbox.isChecked = false
-            selectedList.remove(place)
+            selectedList.remove(location)
         } else {
             checkbox.isChecked = true
-            selectedList.add(place)
+            selectedList.add(location)
         }
 
         selectedListSize.postValue(selectedList.size)
@@ -299,23 +276,23 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
     }
 
     fun deleteItem(position: Int) {
-        placesListViewModel.deletePlace(placesList[position])
+        locationsListViewModel.deleteLocation(locationsList[position])
     }
 
-    fun setData(data: ArrayList<Place>) {
-        if(placesList.isEmpty()){
+    fun setData(data: ArrayList<Location>) {
+        if(locationsList.isEmpty()){
             mRecyclerView.alpha = 0f
             mRecyclerView.animate().setDuration(600).alpha(1f)
         }
 
-        if(data.size > placesList.size) {
+        if(data.size > locationsList.size) {
             mRecyclerView.smoothScrollToPosition(0)
         }
 
-        val diffCallback = PlacesDiffCallback(placesList, data)
+        val diffCallback = LocationsDiffCallback(locationsList, data)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
-        placesList.clear()
-        placesList.addAll(data)
+        locationsList.clear()
+        locationsList.addAll(data)
         diffResult.dispatchUpdatesTo(this)
     }
 
@@ -341,23 +318,23 @@ class PlacesListAdapter(var placesListViewModel: PlacesListViewModel, var search
     fun onViewMoved(oldPosition: Int, newPosition: Int) {
         if (oldPosition < newPosition) {
             for (i in oldPosition until newPosition) {
-                Collections.swap(placesList, i, i + 1)
-                val order1: Int = placesList[i].order
-                val order2: Int = placesList[i + 1].order
-                placesList[i].order = order2
-                placesList[i + 1].order = order1
+                Collections.swap(locationsList, i, i + 1)
+                val order1: Int = locationsList[i].id
+                val order2: Int = locationsList[i + 1].id
+                locationsList[i].id = order2
+                locationsList[i + 1].id = order1
             }
         } else {
             for (i in oldPosition downTo newPosition + 1) {
-                Collections.swap(placesList, i, i - 1)
-                val order1: Int = placesList[i].order
-                val order2: Int = placesList[i - 1].order
-                placesList[i].order = order2
-                placesList[i - 1].order = order1
+                Collections.swap(locationsList, i, i - 1)
+                val order1: Int = locationsList[i].id
+                val order2: Int = locationsList[i - 1].id
+                locationsList[i].id = order2
+                locationsList[i - 1].id = order1
             }
         }
 
-        placesListViewModel.updateList(placesList)
+        locationsListViewModel.updateList(locationsList)
         notifyItemMoved(oldPosition, newPosition)
     }
 

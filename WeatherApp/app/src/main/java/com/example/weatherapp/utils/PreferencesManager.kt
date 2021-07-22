@@ -13,8 +13,18 @@ class PreferencesManager private constructor(context: Context) :
         sharedPrefs.registerOnSharedPreferenceChangeListener(this)
     }
 
+    var locationId: Int
+        get() = sharedPrefs.getInt(KEY_LOCATION_ID, 0)
+
+        set(value) {
+            sharedPrefs.edit {
+                putInt(KEY_LOCATION_ID, value)
+                apply()
+            }
+        }
+
     var city: String?
-        get() = sharedPrefs.getString(KEY_CITY, "Warsaw")
+        get() = sharedPrefs.getString(KEY_CITY, "")
 
         set(value) {
             sharedPrefs.edit {
@@ -24,7 +34,7 @@ class PreferencesManager private constructor(context: Context) :
         }
 
     var countryCode: String?
-        get() = sharedPrefs.getString(KEY_COUNTRY_CODE, "PL")
+        get() = sharedPrefs.getString(KEY_COUNTRY_CODE, "")
 
         set(value) {
             sharedPrefs.edit {
@@ -33,22 +43,22 @@ class PreferencesManager private constructor(context: Context) :
             }
         }
 
-    var lat: String?
-        get() = sharedPrefs.getString(KEY_LAT, defaultLat)
+    var lat: Double
+        get() = java.lang.Double.longBitsToDouble(sharedPrefs.getLong(KEY_LAT, 0))
 
         set(value) {
             sharedPrefs.edit {
-                putString(KEY_LAT, value)
+                putLong(KEY_LAT, java.lang.Double.doubleToRawLongBits(value))
                 apply()
             }
         }
 
-    var lon: String?
-        get() = sharedPrefs.getString(KEY_LON, defaultLon)
+    var lon: Double
+        get() = java.lang.Double.longBitsToDouble(sharedPrefs.getLong(KEY_LON, 0))
 
         set(value) {
             sharedPrefs.edit {
-                putString(KEY_LON, value)
+                putLong(KEY_LON, java.lang.Double.doubleToRawLongBits(value))
                 apply()
             }
         }
@@ -73,27 +83,25 @@ class PreferencesManager private constructor(context: Context) :
             }
         }
 
-    var isSwipeEnabled: Boolean
-        get() = sharedPrefs.getBoolean(KEY_SWIPE_ENABLED, true)
+    var askedLocationPermission: Boolean
+        get() = sharedPrefs.getBoolean(KEY_ASKED_LOCATION_PERMISSION, false)
 
         set(value) {
             sharedPrefs.edit {
-                putBoolean(KEY_SWIPE_ENABLED, value)
+                putBoolean(KEY_ASKED_LOCATION_PERMISSION, value)
                 apply()
             }
         }
 
     companion object {
+        const val KEY_LOCATION_ID = "KEY_LOCATION_ID"
         const val KEY_CITY = "KEY_CITY"
         const val KEY_COUNTRY_CODE = "KEY_COUNTRY_CODE"
         const val KEY_LAT = "KEY_LAT"
         const val KEY_LON = "KEY_LON"
         const val KEY_TIMEZONE = "KEY_TIMEZONE"
         const val KEY_USE_BACKGROUND_DAY = "KEY_USE_BACKGROUND_DAY"
-        const val KEY_SWIPE_ENABLED = "KEY_SWIPE_ENABLED"
-
-        const val defaultLat = "52.2298"
-        const val defaultLon = "21.0118"
+        const val KEY_ASKED_LOCATION_PERMISSION = "KEY_ASKED_LOCATION_PERMISSION"
 
         @Volatile
         private var INSTANCE: PreferencesManager? = null

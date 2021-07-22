@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="location"
+            type="com.example.weatherapp.model.db.location.Location"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/round_corners_transparent"
+        android:paddingTop="26dp"
+        android:paddingBottom="26dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        tools:background="@drawable/round_corners_day">
+
+        <ImageView
+            android:id="@+id/drag_handle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_drag_handle"
+            android:visibility="gone"
+            android:clickable="true"
+            android:scaleX="0.8"
+            android:scaleY="1.1"
+            android:contentDescription="@string/move"
+            app:layout_constraintTop_toTopOf="@id/info_layout"
+            app:layout_constraintBottom_toBottomOf="@id/info_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:visibility="visible"/>
+
+        <LinearLayout
+            android:id="@+id/info_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="24dp"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/drag_handle"
+            app:layout_constraintEnd_toStartOf="@id/location_current_temp">
+
+            <TextView
+                android:id="@+id/location_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="@{@string/city_country_code(location.city, location.countryCode)}"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:drawablePadding="1dp"
+                tools:text="Tuscany, IT"/>
+
+            <TextView
+                android:id="@+id/temps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text"
+                android:text="@{@string/val_temps_decimal(location.tempMax, location.tempMin)}"
+                android:textSize="14sp"
+                tools:text="23° / 14°"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/location_current_temp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="2dp"
+            android:textColor="@color/white"
+            android:textAlignment="viewEnd"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:text="@{@string/val_degrees_decimal(location.currentTemp)}"
+            app:tint="@color/white"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/checkbox"
+            tools:text="24°"/>
+
+        <com.example.weatherapp.utils.widgets.CheckableImageView
+            android:id="@+id/checkbox"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:padding="4dp"
+            android:layout_gravity="center"
+            android:src="@drawable/checkbox_state"
+            android:visibility="gone"
+            android:clickable="false"
+            android:contentDescription="@string/selected"
+            app:useMaterialThemeColors="false"
+            app:layout_constraintTop_toTopOf="@id/location_current_temp"
+            app:layout_constraintBottom_toBottomOf="@id/location_current_temp"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:visibility="visible"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

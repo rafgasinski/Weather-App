@@ -1,28 +1,19 @@
 package com.example.weatherapp.model.adapters
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.weatherapp.R
 import com.example.weatherapp.databinding.ItemForecastBinding
 import com.example.weatherapp.model.response.onecall.Daily
-import com.example.weatherapp.utils.*
-import kotlin.math.roundToInt
 
-class DailyForecastAdapter(private val dailyForecastList: List<Daily>): RecyclerView.Adapter<DailyForecastAdapter.Holder>() {
+class DailyForecastAdapter: RecyclerView.Adapter<DailyForecastAdapter.Holder>() {
+
+    private var dailyDataList = listOf<Daily>()
 
     inner class Holder(private val binding: ItemForecastBinding): RecyclerView.ViewHolder(binding.root) {
-        fun bind(daily: Daily, context: Context) {
-            updateIcon(daily.weather[0].icon, binding.forecastIcon)
-
-            val tempMax = daily.temp.max.roundToInt()
-            val tempMin = daily.temp.min.roundToInt()
-
-            binding.weatherDescription.text = daily.weather[0].description.capitalizeFirst
-            binding.dayWeek.text = getDayOfWeek(daily.dt)
-            binding.temps.text = String.format(context.resources.getString(R.string.decimal_val_temps), tempMax, tempMin)
+        fun bind(daily: Daily) {
+            binding.daily = daily
         }
 
     }
@@ -33,12 +24,17 @@ class DailyForecastAdapter(private val dailyForecastList: List<Daily>): Recycler
     }
 
     override fun getItemCount(): Int {
-        return dailyForecastList.size
+        return dailyDataList.size
     }
 
     @SuppressLint("SimpleDateFormat")
     override fun onBindViewHolder(holder: Holder, position: Int) {
-        holder.bind(dailyForecastList[position], holder.itemView.context)
+        holder.bind(dailyDataList[position])
 
+    }
+
+    fun setData(data: List<Daily>) {
+        dailyDataList = data
+        notifyDataSetChanged()
     }
 }

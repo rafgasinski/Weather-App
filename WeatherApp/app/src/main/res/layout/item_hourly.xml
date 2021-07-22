@@ -1,50 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="120dp"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:layout_margin="5dp">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="hourly"
+            type="com.example.weatherapp.model.response.onecall.Hourly"/>
+    </data>
+
+    <LinearLayout
+        android:layout_width="120dp"
+        android:layout_height="106dp"
+        android:layout_margin="5dp"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/hourly_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center|top"
+            android:layout_gravity="center"
             android:textAlignment="center"
-            android:textSize="12sp"
             android:textColor="@color/text"
-            tools:text="17:00"/>
+            android:textSize="12sp"
+            tools:text="17:00" />
 
         <TextView
             android:id="@+id/hourly_temp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
             android:layout_gravity="center"
+            android:layout_marginTop="2dp"
+            android:text="@{@string/val_degrees(hourly.temp)}"
             android:textAlignment="center"
-            android:textSize="18sp"
             android:textColor="@color/white"
+            android:textSize="18sp"
             android:textStyle="bold"
-            tools:text="27°"/>
+            tools:text="27°" />
 
         <ImageView
             android:id="@+id/hourly_icon"
             android:layout_width="match_parent"
             android:layout_height="30dp"
+            android:layout_gravity="center"
             android:layout_marginTop="10dp"
             android:contentDescription="@string/weather_icon"
-            tools:src="@drawable/ic_few_clouds_day"/>
+            app:weatherIcon="@{hourly.weather[0].icon}"
+            tools:src="@drawable/ic_few_clouds_day" />
 
         <TextView
             android:id="@+id/hourly_wind"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            app:textWindSpeed="@{hourly.windSpeed}"
             android:textAlignment="center"
-            android:textSize="12sp"
             android:textColor="@color/white"
-            tools:text="12.2 km/h"/>
+            android:textSize="12sp"
+            tools:text="12.2 km/h" />
 
-</LinearLayout>
+    </LinearLayout>
+
+</layout>

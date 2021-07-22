@@ -49,19 +49,18 @@
                 android:id="@+id/search_view"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_marginStart="22dp"
                 android:layout_marginTop="14dp"
-                android:layout_marginEnd="22dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
                 app:iconifiedByDefault="false"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/toolbar"
-                app:layout_constraintBottom_toTopOf="@id/places_recycler_view"
-                app:queryHint="@string/add_location"
-                app:searchIcon="@drawable/ic_search" />
+                app:layout_constraintBottom_toTopOf="@id/locations_recycler_view"
+                app:queryHint="@string/add_location"/>
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/places_recycler_view"
+                android:id="@+id/locations_recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:clipToPadding="false"
@@ -75,7 +74,7 @@
                 app:layout_constraintVertical_bias="0.914"
                 tools:alpha="1"
                 tools:itemCount="6"
-                tools:listitem="@layout/item_place" />
+                tools:listitem="@layout/item_location" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

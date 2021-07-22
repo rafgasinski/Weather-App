@@ -12,35 +12,24 @@ import android.os.Vibrator
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.example.weatherapp.utils.ActionButton
-import com.example.weatherapp.utils.PreferencesManager
+import com.example.weatherapp.utils.widgets.ActionButton
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 @SuppressLint("ClickableViewAccessibility")
-abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private val recyclerView: RecyclerView, searchView: SearchView, private var buttonWidth: Int) : ItemTouchHelper.Callback(){
+class ItemMoveHelper(private val adapter: LocationsListAdapter, private val recyclerView: RecyclerView, private val deleteButton: ActionButton) : ItemTouchHelper.Callback(){
 
-    private val preferencesManager = PreferencesManager.getInstance()
-    private var buttonList: MutableList<ActionButton>? = null
-    private lateinit var gestureDetector: GestureDetector
     private var swipePosition = -1
-    private var swipeThreshold = 0.5f
-    private val buttonBuffer: MutableMap<Int, MutableList<ActionButton>>
-    private lateinit var removerQueue: LinkedList<Int>
-
-    abstract fun instantiateActionButton(viewHolder: RecyclerView.ViewHolder, buffer: MutableList<ActionButton>)
+    private var swipeThreshold = 0f
+    private lateinit var gestureDetector: GestureDetector
+    private val buttonBuffer: MutableList<Int>
+    private var removerQueue: LinkedList<Int>
 
     private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
-            for(button in buttonList!!) {
-                if(button.onClick(e!!.x, e.y)){
-                    break
-                }
-            }
+            deleteButton.onClick(e!!.x, e.y)
             return true
         }
     }
@@ -61,18 +50,22 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
             if(rect.top < point.y && rect.bottom > point.y) {
                 gestureDetector.onTouchEvent(event)
             } else {
-                removerQueue.add(swipePosition)
-                swipePosition = -1
-                recoverItem()
+                startRecoverItem()
             }
         }
         false
 
     }
 
+    fun startRecoverItem() {
+        removerQueue.add(swipePosition)
+        swipePosition = -1
+        recoverItem()
+    }
+
     @Synchronized
     private fun recoverItem() {
-        while(!removerQueue.isEmpty()) {
+        while(removerQueue.isNotEmpty()) {
             val pos = removerQueue.poll()!!.toInt()
 
             if(pos > -1) {
@@ -82,16 +75,12 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
     }
 
     init {
-        buttonList = arrayListOf()
         gestureDetector = GestureDetector(recyclerView.context, gestureListener)
         recyclerView.setOnTouchListener(onTouchListener)
-        searchView.setOnTouchListener(onTouchListener)
-
-        buttonBuffer = HashMap()
+        buttonBuffer = mutableListOf()
         removerQueue = IntLinkedList()
 
         attachToSwipe()
-
     }
 
     class IntLinkedList : LinkedList<Int>() {
@@ -137,7 +126,7 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
     }
 
     override fun isItemViewSwipeEnabled(): Boolean {
-        return preferencesManager.isSwipeEnabled
+        return !adapter.actionModeEnabled
     }
 
     @Suppress("DEPRECATION")
@@ -149,14 +138,8 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
         }
 
         swipePosition = pos
-        if(buttonBuffer.containsKey(swipePosition)){
-            buttonList = buttonBuffer[swipePosition]
-        } else {
-            buttonList!!.clear()
-        }
-
         buttonBuffer.clear()
-        swipeThreshold = 0.5f * buttonList!!.size.toFloat() * buttonWidth.toFloat()
+        swipeThreshold = 0.5f * buttonWidth.toFloat()
         recoverItem()
 
         val vibrator = recyclerView.context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -212,30 +195,22 @@ abstract class ItemMoveHelper(private val adapter: PlacesListAdapter, private va
 
         if(actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             if(dX < 0) {
-                var buffer: MutableList<ActionButton> = ArrayList()
-
-                if(!buttonBuffer.containsKey(pos)) {
-                    instantiateActionButton(viewHolder, buffer)
-                    buttonBuffer[pos] = buffer
-                } else {
-                    buffer = buttonBuffer[pos]!!
-                }
-
-                translationX = dX * buffer.size.toFloat() * buttonWidth.toFloat() / itemView.width * 1.1f
-                drawButton(c, itemView, buffer, translationX, pos)
+                translationX = dX * buttonWidth.toFloat() / itemView.width * 1.1f
+                drawButton(c, itemView, translationX, pos)
             }
         }
         super.onChildDraw(c, recyclerView, viewHolder, translationX, dY, actionState, isCurrentlyActive)
     }
 
-    private fun drawButton(c: Canvas, itemView: View, buffer: MutableList<ActionButton>, translationX: Float, pos: Int) {
-        var right = itemView.right.toFloat()
-        val mButtonWidth = -1 * translationX / buffer.size
-        for (button in buffer) {
-            val left = right - mButtonWidth
-            button.onDraw(c, RectF(left, itemView.top.toFloat(), right, itemView.bottom.toFloat()), pos)
-            right = left
-        }
+    private fun drawButton(c: Canvas, itemView: View, translationX: Float, pos: Int) {
+        val right = itemView.right.toFloat()
+        val mButtonWidth = -1 * translationX
+        val left = right - mButtonWidth
+        deleteButton.onDraw(c, RectF(left, itemView.top.toFloat(), right, itemView.bottom.toFloat()), pos)
+    }
+
+    companion object {
+        private const val buttonWidth = 180
     }
 
 }

@@ -15,8 +15,9 @@ import retrofit2.http.Query
 interface OpenWeatherApi {
     @GET("onecall?")
     suspend fun getOneCallForecast(
-            @Query("lat") lat: String,
-            @Query("lon") lon: String,
+            @Query("lat") lat: Double,
+            @Query("lon") lon: Double,
+            @Query("exclude") exclude: String
     ): Response<OneCallResponse>
 
     @GET("weather?")
@@ -30,9 +31,8 @@ interface OpenWeatherApi {
                 val url = chain.request()
                     .url
                     .newBuilder()
-                    .addQueryParameter("appid", Constants.WEATHER_API_KEY)
-                    .addQueryParameter("exclude", Constants.EXCLUDE)
-                    .addQueryParameter("units", "metric")
+                    .addQueryParameter("appid", Constants.API_KEY)
+                    .addQueryParameter("units", Constants.UNITS)
                     .build()
 
                 val request = chain.request()

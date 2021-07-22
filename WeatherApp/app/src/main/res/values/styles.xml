@@ -12,6 +12,8 @@
     <style name="CustomSearchView" parent="Widget.AppCompat.Light.SearchView">
         <item name="android:background">@drawable/search_view_background</item>
         <item name="queryBackground">@android:color/transparent</item>
+        <item name="searchIcon">@drawable/ic_search</item>
+        <item name="closeIcon">@drawable/ic_close_search</item>
     </style>
 
     <style name="Toolbar.Style.NavIconAdd" parent="Toolbar.Style">
@@ -37,13 +39,14 @@
 
     <style name="CustomTextViewStyle" parent="android:Widget.TextView">
         <item name="android:textColor">?colorControlNormal</item>
-        <item name="android:fontFamily">@font/metropolis_regular</item>
     </style>
 
-    <style name="CustomEditTextStyle" parent="android:Widget.EditText">
-        <item name="android:textCursorDrawable">@null</item>
-        <item name="android:textColor">?colorControlNormal</item>
-        <item name="android:fontFamily">@font/metropolis_regular</item>
+    <style name="CustomSnackbarStyle" parent="@style/Widget.MaterialComponents.Snackbar">
+        <item name="android:backgroundTint">@color/accent_background_dark</item>
+    </style>
+
+    <style name="CustomSnackbarText" parent="@style/Widget.MaterialComponents.Snackbar.TextView">
+        <item name="android:textColor">@color/white</item>
     </style>
 
 </resources>

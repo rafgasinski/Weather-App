@@ -5,8 +5,8 @@
 
     <data>
         <variable
-            name="weather"
-            type="com.example.weatherapp.model.data.WeatherData"/>
+            name="current"
+            type="com.example.weatherapp.model.response.onecall.Current"/>
     </data>
 
     <RelativeLayout
@@ -79,6 +79,7 @@
                         android:layout_height="120dp"
                         android:layout_marginTop="40dp"
                         android:layout_marginEnd="60dp"
+                        app:weatherIcon="@{current.weather[0].icon}"
                         android:contentDescription="@string/weather_icon"
                         app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -92,7 +93,7 @@
                         android:layout_height="wrap_content"
                         android:textColor="@color/white"
                         android:textSize="76sp"
-                        android:text="@{weather.temp}"
+                        android:text="@{@string/val_rounded(current.temp)}"
                         android:textStyle="bold"
                         app:layout_constraintTop_toTopOf="@id/image_weather"
                         app:layout_constraintBottom_toBottomOf="@id/image_weather"
@@ -114,12 +115,12 @@
                         app:layout_constraintStart_toEndOf="@id/temp"
                         app:layout_constraintEnd_toEndOf="parent"/>
 
-                    <TextView
+                    <com.example.weatherapp.utils.widgets.CapitalizedTextView
                         android:id="@+id/weather_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="30dp"
-                        android:text="@{weather.description}"
+                        android:layout_marginTop="40dp"
+                        android:text="@{current.weather[0].description}"
                         android:textColor="@color/white"
                         android:textSize="26sp"
                         android:textStyle="bold"
@@ -132,8 +133,10 @@
                         android:id="@+id/forecast_recycler_view"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="30dp"
-                        android:padding="12dp"
+                        android:layout_marginTop="46dp"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="12dp"
+                        android:clipToPadding="false"
                         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                         app:layout_constraintTop_toBottomOf="@id/weather_description"
                         app:layout_constraintStart_toStartOf="parent"
@@ -145,7 +148,8 @@
                         android:id="@+id/hourly_recycler_view"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="28dp"
+                        android:layout_marginTop="30dp"
+                        android:clipToPadding="false"
                         android:orientation="horizontal"
                         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                         app:layout_constraintTop_toBottomOf="@+id/forecast_recycler_view"
@@ -159,8 +163,8 @@
                         android:orientation="horizontal"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="42dp"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginTop="46dp"
+                        android:layout_marginBottom="6dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginEnd="16dp"
                         android:visibility="invisible"
@@ -174,13 +178,12 @@
                         tools:visibility="visible">
 
                         <me.bastanfar.semicirclearcprogressbar.SemiCircleArcProgressBar
-                            android:id="@+id/sun_progress"
+                            android:id="@+id/sun_progress_bar"
                             android:layout_width="match_parent"
-                            android:layout_height="36dp"
-                            android:layout_marginTop="16dp"
-                            android:layout_marginStart="20dp"
-                            android:layout_marginEnd="20dp"
-                            app:percent="@{weather.sunProgress}"
+                            android:layout_height="50dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginStart="18dp"
+                            android:layout_marginEnd="18dp"
                             app:progressBarColor="@color/white"
                             app:progressPlaceHolderColor="@color/secondary"
                             app:progressBarWidth="5"
@@ -196,14 +199,14 @@
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
                             android:layout_marginTop="4dp"
-                            android:layout_marginStart="20dp"
-                            android:text="@{weather.sunrise}"
+                            android:layout_marginStart="18dp"
+                            app:textHour="@{current.sunrise}"
                             android:textColor="@color/text"
                             android:textSize="12sp"
                             android:drawablePadding="8dp"
                             app:drawableEndCompat="@drawable/ic_sunrise"
-                            app:layout_constraintTop_toBottomOf="@id/sun_progress"
-                            app:layout_constraintStart_toStartOf="@id/sun_progress"
+                            app:layout_constraintTop_toBottomOf="@id/sun_progress_bar"
+                            app:layout_constraintStart_toStartOf="@id/sun_progress_bar"
                             tools:text="04:41"/>
 
                         <TextView
@@ -212,23 +215,21 @@
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
                             android:layout_marginTop="4dp"
-                            android:layout_marginEnd="20dp"
-                            android:text="@{weather.sunset}"
+                            android:layout_marginEnd="18dp"
+                            app:textHour="@{current.sunset}"
                             android:textColor="@color/text"
                             android:textSize="12sp"
                             android:drawablePadding="8dp"
                             app:drawableEndCompat="@drawable/ic_sunset"
-                            app:layout_constraintTop_toBottomOf="@id/sun_progress"
-                            app:layout_constraintEnd_toEndOf="@id/sun_progress"
+                            app:layout_constraintTop_toBottomOf="@id/sun_progress_bar"
+                            app:layout_constraintEnd_toEndOf="@id/sun_progress_bar"
                             tools:text="20:58"/>
 
                         <GridLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="8"
                             android:alignmentMode="alignMargins"
                             android:columnCount="2"
-                            android:columnOrderPreserved="false"
                             android:rowCount="2"
                             android:layout_marginTop="16dp"
                             app:layout_constraintTop_toBottomOf="@id/sunset"
@@ -242,7 +243,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center_horizontal|center_vertical"
-                                android:layout_marginStart="20dp"
+                                android:layout_marginStart="18dp"
                                 android:orientation="vertical">
 
                                 <TextView
@@ -260,7 +261,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="6dp"
-                                    android:text="@{@string/decimal_val_degrees(weather.feelsLike)}"
+                                    app:textTemp="@{current.feelsLike}"
                                     android:textAlignment="center"
                                     android:textColor="@android:color/white"
                                     android:textSize="18sp"
@@ -282,7 +283,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="6dp"
-                                    android:text="@{@string/decimal_val_percent(weather.clouds)}"
+                                    android:text="@{@string/val_percent(current.clouds)}"
                                     android:textAlignment="center"
                                     android:textColor="@color/white"
                                     android:textSize="18sp"
@@ -304,7 +305,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="6dp"
-                                    android:text="@{@string/decimal_val_kmh(weather.windSpeed)}"
+                                    app:textWindSpeed="@{current.windSpeed}"
                                     android:textAlignment="center"
                                     android:textColor="@color/white"
                                     android:textSize="18sp"
@@ -318,7 +319,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center_horizontal|center_vertical"
-                                android:layout_marginStart="20dp"
+                                android:layout_marginStart="18dp"
                                 android:orientation="vertical">
 
                                 <TextView
@@ -336,7 +337,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="6dp"
-                                    android:text="@{@string/decimal_val_percent(weather.humidity)}"
+                                    android:text="@{@string/val_percent(current.humidity)}"
                                     android:textAlignment="center"
                                     android:textColor="@color/white"
                                     android:textSize="18sp"
@@ -358,7 +359,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="6dp"
-                                    android:text="@{@string/decimal_val_hPa(weather.pressure)}"
+                                    android:text="@{@string/val_hPa(current.pressure)}"
                                     android:textAlignment="center"
                                     android:textColor="@color/white"
                                     android:textSize="18sp"
@@ -380,7 +381,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="6dp"
-                                    android:text="@{weather.uvIndex}"
+                                    android:text="@{@string/val_rounded(current.uvi)}"
                                     android:textAlignment="center"
                                     android:textColor="@color/white"
                                     android:textSize="18sp"
@@ -405,15 +406,15 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:textColor="@color/white"
+            android:textSize="24sp"
             android:textStyle="bold"
             android:visibility="gone"
-            android:gravity="center"
-            android:textSize="24sp"/>
+            android:gravity="center" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/refresh_button"
             android:layout_width="120dp"
-            android:layout_height="56dp"
+            android:layout_height="52dp"
             app:cornerRadius="16dp"
             android:backgroundTint="@color/accent"
             android:layout_below="@id/error"

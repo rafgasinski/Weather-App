@@ -3,14 +3,19 @@ package com.example.weatherapp.view
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.IntentSender.SendIntentException
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.drawable.TransitionDrawable
-import android.location.*
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,31 +32,42 @@ import com.example.weatherapp.R
 import com.example.weatherapp.databinding.FragmentCurrentWeatherBinding
 import com.example.weatherapp.model.adapters.DailyForecastAdapter
 import com.example.weatherapp.model.adapters.HourlyForecastAdapter
-import com.example.weatherapp.model.data.WeatherData
+import com.example.weatherapp.model.db.saved.SavedResponse
+import com.example.weatherapp.model.response.onecall.OneCallResponse
 import com.example.weatherapp.utils.*
-import com.example.weatherapp.viewmodel.ForecastViewModel
+import com.example.weatherapp.utils.Constants.Companion.LOCATION_SETTINGS_REQUEST
+import com.example.weatherapp.viewmodel.CurrentWeatherViewModel
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
+import com.google.android.material.snackbar.Snackbar
 import java.util.*
-import kotlin.math.roundToInt
 
 
-class CurrentWeather : Fragment() {
+class CurrentWeather: Fragment() {
 
     private var _binding: FragmentCurrentWeatherBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var forecastViewModel: ForecastViewModel
+    private lateinit var currentWeatherViewModel: CurrentWeatherViewModel
 
-    private lateinit var adapterHourlyForecastList: HourlyForecastAdapter
-    private lateinit var adapterDailyForecastList: DailyForecastAdapter
+    private val adapterHourlyForecastList: HourlyForecastAdapter by lazy {
+        HourlyForecastAdapter()
+    }
+
+    private val adapterDailyForecastList: DailyForecastAdapter by lazy {
+        DailyForecastAdapter()
+    }
 
     private lateinit var networkConnection: NetworkConnectionListener
 
     private lateinit var fusedClient: FusedLocationProviderClient
     private lateinit var mRequest: LocationRequest
     private lateinit var mCallback: LocationCallback
+
+    private var lastResponse: OneCallResponse? = null
+
+    private var dataExpired = false
 
     private val permissions = arrayOf(
         Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -74,12 +90,33 @@ class CurrentWeather : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        fusedClient.removeLocationUpdates(mCallback)
+        if(lastResponse != null) {
+            currentWeatherViewModel.upsertLastWeatherResponse(SavedResponse(
+                city = preferencesManager.city!!,
+                countryCode = preferencesManager.countryCode!!,
+                oneCallResponse = lastResponse!!
+            ))
+        }
     }
 
     override fun onStart() {
         super.onStart()
         fusedClient = LocationServices.getFusedLocationProviderClient(requireContext())
+
+        mCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                for (location in locationResult.locations) {
+                    manageLocationData(location)
+                }
+                fusedClient.removeLocationUpdates(mCallback)
+            }
+
+            override fun onLocationAvailability(locationAvailability: LocationAvailability) {
+                if(locationAvailability.isLocationAvailable) {
+                    showProgressBar()
+                }
+            }
+        }
     }
 
     override fun onCreateView(
@@ -88,27 +125,13 @@ class CurrentWeather : Fragment() {
     ): View {
         _binding = FragmentCurrentWeatherBinding.inflate(inflater, container, false)
 
-        val preferencesManager = PreferencesManager.getInstance()
-
-        val gradientDrawablesDayToNight = arrayOf(
-            ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_day),
-            ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_night),
-        )
-
-        val gradientDrawablesNightToDay = arrayOf(
-            ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_night),
-            ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_day)
-        )
-
-        forecastViewModel = ViewModelProvider(this).get(ForecastViewModel::class.java)
+        currentWeatherViewModel = ViewModelProvider(this).get(CurrentWeatherViewModel::class.java)
 
         binding.mainLayout.background = if (preferencesManager.useBackgroundDay) {
             ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_day)
         } else {
             ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_night)
         }
-
-        forecastViewModel.getOneCallForecast(preferencesManager.lat!!, preferencesManager.lon!!)
 
         networkConnection = NetworkConnectionListener(requireContext())
         networkConnection.observe(viewLifecycleOwner, { connected ->
@@ -127,29 +150,17 @@ class CurrentWeather : Fragment() {
             }
         }
 
-        mCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                for (location in locationResult.locations) {
-                    manageLocationData(location)
-                }
-                fusedClient.removeLocationUpdates(mCallback)
-            }
-
-            override fun onLocationAvailability(locationAvailability: LocationAvailability) {
-                if(locationAvailability.isLocationAvailable) {
-                    showProgressBar()
-                }
-            }
-        }
-
         binding.toolbar.apply {
             setNavigationOnClickListener {
-                findNavController().navigate(CurrentWeatherDirections.actionCurrentWeatherToPlacesList())
+                findNavController().navigate(R.id.action_currentWeather_to_locationsList)
             }
             setOnMenuItemClickListener {
                 when(it.itemId) {
                     R.id.use_location -> {
+                        it.isEnabled = false
                         checkPermissions()
+
+                        view?.postDelayed({ it.isEnabled = true }, 500)
                         true
                     }
 
@@ -158,14 +169,22 @@ class CurrentWeather : Fragment() {
             }
         }
 
-        binding.refreshButton.setOnClickListener {
-            forecastViewModel.getOneCallForecast(preferencesManager.lat!!, preferencesManager.lon!!)
-        }
-
         binding.toolbarTitle.text = preferencesManager.city
 
+        binding.hourlyRecyclerView.apply {
+            adapter = adapterHourlyForecastList
+        }
+
+        binding.forecastRecyclerView.apply {
+            adapter = adapterDailyForecastList
+        }
+
         binding.refreshLayout.setOnRefreshListener {
-            forecastViewModel.getOneCallForecast(preferencesManager.lat!!, preferencesManager.lon!!)
+            currentWeatherViewModel.getOneCallForecast(preferencesManager.lat, preferencesManager.lon)
+        }
+
+        binding.refreshButton.setOnClickListener {
+            currentWeatherViewModel.getOneCallForecast(preferencesManager.lat, preferencesManager.lon)
         }
 
         binding.scrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, _ ->
@@ -178,80 +197,29 @@ class CurrentWeather : Fragment() {
             }
         })
 
-        forecastViewModel.responseData.observe(viewLifecycleOwner,  { response ->
+        currentWeatherViewModel.savedWeatherData.observe(viewLifecycleOwner, { savedForecast ->
+            if(savedForecast != null) {
+                handleResponse(savedForecast)
+
+                if(timestampOlderThanTenMin(savedForecast.current.dt)) {
+                    dataExpired = true
+                    currentWeatherViewModel.getOneCallForecast(preferencesManager.lat, preferencesManager.lon)
+                } else {
+                    dataExpired = false
+                }
+            } else {
+                currentWeatherViewModel.getOneCallForecast(preferencesManager.lat, preferencesManager.lon)
+            }
+        })
+
+        currentWeatherViewModel.responseData.observe(viewLifecycleOwner,  { response ->
             when(response) {
                 is Resource.Success -> {
                     hideProgressBar()
 
                     response.data?.let { responseBody ->
-                        preferencesManager.timeZone = responseBody.timezone
-
-                        val currentData = responseBody.current
-
-                        val iconCode = currentData.weather[0].icon
-
-                        val oldBackground = preferencesManager.useBackgroundDay
-                        preferencesManager.useBackgroundDay = iconCode.last().toString() == "d"
-
-                        updateIcon(iconCode, binding.imageWeather)
-
-                        binding.mainLayout.apply {
-                            if (preferencesManager.useBackgroundDay != oldBackground) {
-                                if (preferencesManager.useBackgroundDay) {
-                                    val transitionDrawable = TransitionDrawable(gradientDrawablesNightToDay)
-                                    background = transitionDrawable
-                                    transitionDrawable.startTransition(1000)
-                                } else {
-                                    val transitionDrawable = TransitionDrawable(gradientDrawablesDayToNight)
-                                    background = transitionDrawable
-                                    transitionDrawable.startTransition(1000)
-                                }
-                            } else {
-                                if (preferencesManager.useBackgroundDay == oldBackground) {
-                                    background = if(preferencesManager.useBackgroundDay) {
-                                        ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_day)
-                                    } else {
-                                        ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_night)
-                                    }
-                                }
-                            }
-                        }
-
-                        responseBody.hourly[0].temp = currentData.temp
-                        responseBody.hourly[0].windSpeed = currentData.windSpeed
-                        responseBody.hourly[0].weather[0].icon = currentData.weather[0].icon
-
-                        adapterHourlyForecastList = HourlyForecastAdapter(responseBody.hourly.take(24))
-                        adapterDailyForecastList = DailyForecastAdapter(responseBody.daily.take(5))
-
-                        binding.hourlyRecyclerView.apply {
-                            adapter = adapterHourlyForecastList
-                        }
-
-                        binding.forecastRecyclerView.apply {
-                            adapter = adapterDailyForecastList
-                        }
-
-                        forecastViewModel.responseData.postValue(null)
-
-                        binding.weather = WeatherData(
-                            currentData.temp.roundToInt().toString(),
-                            currentData.weather[0].description.capitalizeFirst,
-                            timeFormat(currentData.sunrise, responseBody.timezone),
-                            timeFormat(currentData.sunset, responseBody.timezone),
-                            round(currentData.feelsLike),
-                            currentData.clouds.roundToInt().toString(),
-                            convertWindUnit(currentData.windSpeed),
-                            currentData.humidity.toString(),
-                            currentData.pressure.toString(),
-                            currentData.uvi.roundToInt().toString(),
-                            getSunProgress(currentData.dt, currentData.sunrise, currentData.sunset)
-                        )
-
-                        binding.scrollView.visibility = View.VISIBLE
-                        binding.scrollView.alpha = 0f
-                        binding.scrollView.animate().setDuration(600).alpha(1f)
-
+                        lastResponse = responseBody
+                        handleResponse(responseBody)
                     }
                 }
 
@@ -259,6 +227,9 @@ class CurrentWeather : Fragment() {
                     response.message?.let { event ->
                         event.getContentIfNotHandledOrReturnNull()?.let {
                             hideProgressBar()
+                            if(dataExpired) {
+                                Toast.makeText(requireContext(), requireContext().resources.getString(R.string.outdated_data), Toast.LENGTH_SHORT).show()
+                            }
                             showErrorLayout(it)
                         }
                     }
@@ -314,7 +285,25 @@ class CurrentWeather : Fragment() {
 
     private fun checkPermissions() {
         if(!permissionGranted(requireContext(), permissions)) {
-            requestPermissions.launch(permissions)
+            if(!preferencesManager.askedLocationPermission) {
+                requestPermissions.launch(permissions)
+                preferencesManager.askedLocationPermission = true
+            } else {
+                if(shouldShowRequestPermissionRationale(permissions[0]) || shouldShowRequestPermissionRationale(permissions[1])) {
+                    requestPermissions.launch(permissions)
+                } else {
+                    val snackbar = Snackbar.make(binding.mainLayout, "App permission not granted", Snackbar.LENGTH_LONG)
+                        .setAction(this.resources.getString(R.string.settings)) {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            val uri = Uri.fromParts("package", activity?.packageName, null)
+                            intent.data = uri
+                            startActivity(intent)
+                        }
+
+                    snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), R.color.accent_blue))
+                    snackbar.show()
+                }
+            }
         } else {
             getLocation()
         }
@@ -342,7 +331,7 @@ class CurrentWeather : Fragment() {
                     mRequest = LocationRequest.create().apply {
                         interval = 10000
                         fastestInterval = 5000
-                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                        priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
                     }
 
                     val builder = LocationSettingsRequest.Builder()
@@ -354,7 +343,7 @@ class CurrentWeather : Fragment() {
                     task.addOnFailureListener { e ->
                         if (e is ResolvableApiException) {
                             try {
-                                e.startResolutionForResult(activity as MainActivity, 500)
+                                e.startResolutionForResult(activity as MainActivity, LOCATION_SETTINGS_REQUEST)
                             } catch (sendEx: SendIntentException) {}
                         }
                     }
@@ -371,23 +360,62 @@ class CurrentWeather : Fragment() {
         val lat = location.latitude
         val lon = location.longitude
 
-        preferencesManager.lat = lat.toString()
-        preferencesManager.lon = lon.toString()
-
         val gcd = Geocoder(requireContext(), Locale.ENGLISH)
         val addresses: List<Address>? = gcd.getFromLocation(lat, lon, 1)
         addresses?.let {
             if (addresses.isNotEmpty()) {
+                currentWeatherViewModel.getCityDataToAddByCoord(lat, lon, addresses[0].locality, addresses[0].countryCode)
                 binding.toolbarTitle.text = addresses[0].locality
-                preferencesManager.city = addresses[0].locality
-                preferencesManager.countryCode = addresses[0].countryCode
             } else {
-                preferencesManager.city = convertCoordinates(lat, lon)
-                preferencesManager.countryCode = getString(R.string.unknown)
+                Toast.makeText(requireContext(), requireContext().getText(R.string.unknown_location), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun handleResponse(response: OneCallResponse) {
+        preferencesManager.timeZone = response.timezone
+
+        val currentData = response.current
+        val iconCode = currentData.weather[0].icon
+
+        val oldBackground = preferencesManager.useBackgroundDay
+        preferencesManager.useBackgroundDay = iconCode.last().toString() == "d"
+
+        val gradientDrawablesDayToNight = arrayOf(
+            ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_day),
+            ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_night),
+        )
+
+        val gradientDrawablesNightToDay = arrayOf(
+            ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_night),
+            ContextCompat.getDrawable(requireContext(), R.drawable.gradient_background_day)
+        )
+
+        binding.mainLayout.apply {
+            if (preferencesManager.useBackgroundDay != oldBackground) {
+                if (preferencesManager.useBackgroundDay) {
+                    val transitionDrawable = TransitionDrawable(gradientDrawablesNightToDay)
+                    background = transitionDrawable
+                    transitionDrawable.startTransition(1000)
+                } else {
+                    val transitionDrawable = TransitionDrawable(gradientDrawablesDayToNight)
+                    background = transitionDrawable
+                    transitionDrawable.startTransition(1000)
+                }
             }
         }
 
-        forecastViewModel.getOneCallForecast(lat.toString(), lon.toString())
+        adapterHourlyForecastList.setData(response.hourly.take(24))
+        adapterDailyForecastList.setData(response.daily.take(5))
+        binding.current = currentData
+
+        binding.sunProgressBar.setPercent(getSunProgress(currentData.dt, currentData.sunrise, currentData.sunset))
+
+        binding.scrollView.apply {
+            visibility = View.VISIBLE
+            alpha = 0f
+            animate().setDuration(600).alpha(1f)
+        }
     }
 
 }

@@ -2,9 +2,16 @@ package com.example.weatherapp.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities.*
+import android.os.Build
+import android.view.View
+import android.view.WindowInsetsController
 import android.widget.ImageView
+import android.widget.TextView
+import androidx.databinding.BindingAdapter
+import androidx.fragment.app.FragmentActivity
 import com.example.weatherapp.R
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -13,11 +20,60 @@ import java.text.DecimalFormatSymbols
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.math.abs
-import kotlin.math.roundToInt
 
 
 val preferencesManager = PreferencesManager.getInstance()
+
+@BindingAdapter("weatherIcon")
+fun ImageView.bindIcon(iconCode: String?) {
+    iconCode?.let {
+        updateIcon(iconCode, this)
+    }
+}
+
+@BindingAdapter("textHour")
+fun TextView.textHour(dt: Int?) {
+    dt?.let {
+        this.text = timeFormat(dt, preferencesManager.timeZone!!)
+    }
+}
+
+@BindingAdapter("textTemp")
+fun TextView.textTemp(value: Double?) {
+    value?.let {
+        this.text = String.format(context.resources.getString(R.string.val_feels_like_degrees_celsius, round(value)))
+    }
+}
+
+@BindingAdapter("textWindSpeed")
+fun TextView.textWindSpeed(windSpeed: Double?) {
+    windSpeed?.let {
+        this.text = String.format(context.resources.getString(R.string.val_kmh, convertWindUnit(windSpeed)))
+    }
+}
+
+@BindingAdapter("textWeekDay")
+fun TextView.textWeekDay(dt: Int?) {
+    dt?.let {
+        this.text = getDayOfWeek(dt)
+    }
+}
+
+fun getStatusBarHeight(context: Context): Int {
+    val statusBarHeight = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+    return if (statusBarHeight > 0) {
+        context.resources.getDimensionPixelSize(statusBarHeight)
+    } else {
+        0
+    }
+}
+
+fun timestampOlderThanTenMin(dt: Int): Boolean{
+    val tenMin = 10 * 60 * 1000
+
+    val tenMinAgo: Long = (System.currentTimeMillis() - tenMin) / 1000L
+    return dt < tenMinAgo
+}
 
 fun timeFormat(value: Int, givenTimeZone: String): String {
     val zoneId: ZoneId = ZoneId.of(givenTimeZone)
@@ -40,10 +96,8 @@ fun getDayOfWeek(value: Int): String {
 
 fun convertWindUnit(value: Double): String {
     val newValue = BigDecimal(value * 3.6).setScale(1, RoundingMode.HALF_EVEN)
-    val df = DecimalFormat("#0.#", DecimalFormatSymbols.getInstance(Locale.ENGLISH))
-    df.isDecimalSeparatorAlwaysShown = false
 
-    return df.format(newValue)
+    return round(newValue.toDouble())
 }
 
 val String.capitalizeFirst: String get() {
@@ -59,25 +113,6 @@ fun round(value: Double): String {
     df.isDecimalSeparatorAlwaysShown = false
 
     return df.format(value)
-}
-
-fun convertCoordinates(latitude: Double, longitude: Double) : String {
-    var latSeconds = (latitude * 3600).roundToInt()
-    val latDegrees = latSeconds / 3600
-    latSeconds = abs(latSeconds % 3600)
-    val latMinutes = latSeconds / 60
-    latSeconds %= 60
-
-    var longSeconds = (longitude * 3600).roundToInt()
-    val longDegrees = longSeconds / 3600
-    longSeconds = abs(longSeconds % 3600)
-    val longMinutes = longSeconds / 60
-    longSeconds %= 60
-
-    val latDirection = if (latDegrees >= 0) "N" else "S"
-    val lonDirection = if (longDegrees >= 0) "E" else "W"
-
-    return "${abs(latDegrees)}°$latMinutes'$latSeconds\" $latDirection, ${abs(longDegrees)}°$longMinutes'$longSeconds\" $lonDirection"
 }
 
 fun getSunProgress(currentTime: Int, sunrise: Int, sunset: Int) : Int {
@@ -145,6 +180,23 @@ fun updateIcon(iconCode: String?, imageView: ImageView){
             "50" -> imageView.setImageResource(R.drawable.ic_mist)
         }
 
+    }
+}
+
+fun adjustTheme(context: Context, activity: FragmentActivity) {
+    if(context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activity.window?.insetsController?.setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS)
+        } else {
+            @Suppress("DEPRECATION")
+            activity.window?.decorView?.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            } else {
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            }
+        }
     }
 }
 

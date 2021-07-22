@@ -2,9 +2,9 @@ package com.example.weatherapp.model.adapters
 
 import androidx.annotation.Nullable
 import androidx.recyclerview.widget.DiffUtil
-import com.example.weatherapp.model.db.Place
+import com.example.weatherapp.model.db.location.Location
 
-class PlacesDiffCallback(private val oldList: ArrayList<Place>, private val newList: ArrayList<Place>) : DiffUtil.Callback() {
+class LocationsDiffCallback(private val oldList: ArrayList<Location>, private val newList: ArrayList<Location>) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int = oldList.size
 
@@ -15,10 +15,10 @@ class PlacesDiffCallback(private val oldList: ArrayList<Place>, private val newL
     }
 
     override fun areContentsTheSame(oldPosition: Int, newPosition: Int): Boolean {
-        val place = oldList[oldPosition]
-        val place2 = newList[newPosition]
+        val location = oldList[oldPosition]
+        val location2 = newList[newPosition]
 
-        return place == place2
+        return location == location2
     }
 
     @Nullable

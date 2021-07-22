@@ -1,63 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="10dp">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <ImageView
-        android:id="@+id/forecast_icon"
-        android:layout_width="40dp"
-        android:layout_height="34dp"
-        android:layout_gravity="center_vertical"
-        android:contentDescription="@string/weather_icon"
-        tools:src="@drawable/ic_scattered_clouds"/>
+    <data>
+        <variable
+            name="daily"
+            type="com.example.weatherapp.model.response.onecall.Daily"/>
+    </data>
 
-    <TextView
-        android:id="@+id/day_week"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="8dp"
-        android:layout_weight="0"
-        android:textColor="@color/white"
-        android:textSize="16sp"
-        tools:text="Tue"/>
+        android:orientation="horizontal"
+        android:padding="10dp">
 
-    <TextView
-        android:id="@+id/separator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:text="@string/separator"
-        android:textColor="@color/white"
-        android:textSize="16sp"
-        android:layout_marginStart="4dp"/>
+        <ImageView
+            android:id="@+id/forecast_icon"
+            android:layout_width="40dp"
+            android:layout_height="34dp"
+            android:layout_gravity="center_vertical"
+            app:weatherIcon="@{daily.weather[0].icon}"
+            android:contentDescription="@string/weather_icon"
+            tools:src="@drawable/ic_scattered_clouds"/>
 
-    <TextView
-        android:id="@+id/weather_description"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="2"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:textColor="@color/white"
-        android:textSize="16sp"
-        android:layout_marginStart="4dp"
-        tools:text="Light rain" />
+        <TextView
+            android:id="@+id/day_week"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:layout_weight="0"
+            app:textWeekDay="@{daily.dt}"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            tools:text="Tue"/>
 
-    <TextView
-        android:id="@+id/temps"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|end"
-        android:layout_marginEnd="5dp"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        tools:text="26° / 13°"/>
+        <TextView
+            android:id="@+id/separator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/separator"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_marginStart="4dp"/>
 
-</LinearLayout>
+        <com.example.weatherapp.utils.widgets.CapitalizedTextView
+            android:id="@+id/weather_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="2"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@{daily.weather[0].description}"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_marginStart="4dp"
+            tools:text="Light rain" />
+
+        <TextView
+            android:id="@+id/temps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:layout_marginEnd="5dp"
+            android:text="@{@string/val_temps(daily.temp.max, daily.temp.min)}"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:text="26° / 13°"/>
+
+    </LinearLayout>
+
+</layout>

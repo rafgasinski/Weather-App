@@ -75,5 +75,7 @@ dependencies {
     implementation 'com.github.hadibtf:SemiCircleArcProgressBar:1.1.1'
     // Preference Manager
     implementation 'androidx.preference:preference-ktx:1.1.1'
+    // Keyboard Visibility Listener
+    implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:3.0.0-RC3'
 
 }

@@ -1,11 +1,11 @@
-package com.example.weatherapp.utils
+package com.example.weatherapp.utils.widgets
 
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View.OnClickListener
 import android.widget.Checkable
 
-class CheckableImageView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null): androidx.appcompat.widget.AppCompatImageView(context, attrs), Checkable {
+class CheckableImageView constructor(context: Context, attrs: AttributeSet): androidx.appcompat.widget.AppCompatImageView(context, attrs), Checkable {
 
     private var checked = false
     private val checkedStateList = intArrayOf(android.R.attr.state_checked)
