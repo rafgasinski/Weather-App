@@ -13,7 +13,7 @@
     <color name="sun">#ffd54f</color>
     <color name="sun_outline">#ffb74d</color>
     <color name="cloud">#e3e3e3</color>
-    <color name="cloud_back_day">#636363</color>
+    <color name="cloud_back_day">#737373</color>
     <color name="cloud_back_night">#7c7c7c</color>
     <color name="cloud_dark">#929292</color>
     <color name="rain_day">#a7e1fb</color>
