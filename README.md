@@ -1,6 +1,6 @@
 # Weather-App
 ## About
-Application shows current weather data and forecast. The user can search for a location or use his own. After searching, the app will store valid locations in its database.
+Application shows current weather data and forecast from OpenWeather API. The user can search or use device location. After searching, the app will store valid locations and API responses in its database.
 
 ## Features
 * Weather data from user's current or selected location
@@ -9,6 +9,14 @@ Application shows current weather data and forecast. The user can search for a l
 
 ## Screenshots
 
-<img src="https://user-images.githubusercontent.com/61454002/126076275-0a9d2cbb-af30-4319-91a9-69861191767b.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126076276-949fe2af-983e-44a2-b115-9312835f41eb.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126076277-d6160357-2165-4aa2-9ae1-7a418d5e6a4f.jpg" width=22% height=22%>    <img src="https://user-images.githubusercontent.com/61454002/126076278-4d2e9b14-b94d-4cb6-a888-c21cab59aecf.jpg" width=22% height=22%>
+* #### Main view
 
-<img src="https://user-images.githubusercontent.com/61454002/126076279-00a2f3cd-9c94-4e05-a23a-5c87ca69c3c6.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126076280-26558e11-b1bf-48a5-95ba-ccb8ed571abb.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126076281-f7beeecc-a350-467d-970e-cd88f7f1cebc.jpg" width=22% height=22%>    <img src="https://user-images.githubusercontent.com/61454002/126076282-9404023e-7eaf-4965-a33c-1a38c2d7e41c.jpg" width=22% height=22%>
+<img src="https://user-images.githubusercontent.com/61454002/126899000-970abce6-fc47-4801-87ee-5743840dd25c.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126899002-7d9caf2b-51d8-4c21-87f7-a3a56844851f.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126899003-20f6fdac-d392-4448-b76b-b171a921bfd8.jpg" width=22% height=22%>    <img src="https://user-images.githubusercontent.com/61454002/126899005-953897a2-4e2b-4fcd-b2b3-e0f2dec4aba3.jpg" width=22% height=22%>
+
+* #### Location list
+
+<img src="https://user-images.githubusercontent.com/61454002/126899006-2c705c4f-5308-4324-bf2a-0fb2a793b9a6.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126899008-673943b7-7496-4652-bfee-99278807368b.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126899009-f307bfdc-f569-4fc2-99b5-57e258d2a143.jpg" width=22% height=22%>    <img src="https://user-images.githubusercontent.com/61454002/126899011-86f252ed-1a12-4023-b097-18f0276cf0cd.jpg" width=22% height=22%>
+
+* #### First search
+
+<img src="https://user-images.githubusercontent.com/61454002/126898997-78bf7cd0-1fc1-467d-bc5b-df572c41d8e7.jpg" width=22% height=22%>   <img src="https://user-images.githubusercontent.com/61454002/126898999-1571d81c-d6c9-4e73-ba13-901d4ee07b5d.jpg" width=22% height=22%> 
