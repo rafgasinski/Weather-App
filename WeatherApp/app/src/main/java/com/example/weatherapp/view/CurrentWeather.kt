@@ -76,14 +76,14 @@ class CurrentWeather: Fragment() {
 
     private val requestPermissions =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            var hasAllPermissions = true
+            var permissionsGranted = true
             for (permission in permissions) {
                 if(!permission.value) {
-                    hasAllPermissions = false
+                    permissionsGranted = false
                 }
             }
 
-            if(hasAllPermissions) {
+            if(permissionsGranted) {
                 getLocation()
             }
         }
@@ -91,10 +91,11 @@ class CurrentWeather: Fragment() {
     override fun onStop() {
         super.onStop()
         if(lastResponse != null) {
-            currentWeatherViewModel.upsertLastWeatherResponse(SavedResponse(
-                city = preferencesManager.city!!,
-                countryCode = preferencesManager.countryCode!!,
-                oneCallResponse = lastResponse!!
+            currentWeatherViewModel.upsertWeatherResponse(SavedResponse(0,
+                preferencesManager.locationId,
+                preferencesManager.city!!,
+                preferencesManager.countryCode!!,
+                lastResponse!!
             ))
         }
     }
@@ -159,8 +160,8 @@ class CurrentWeather: Fragment() {
                     R.id.use_location -> {
                         it.isEnabled = false
                         checkPermissions()
-
                         view?.postDelayed({ it.isEnabled = true }, 500)
+
                         true
                     }
 
@@ -225,12 +226,12 @@ class CurrentWeather: Fragment() {
 
                 is Resource.Error -> {
                     response.message?.let { event ->
-                        event.getContentIfNotHandledOrReturnNull()?.let {
+                        event.getContentIfNotHandledOrReturnNull()?.let { message ->
                             hideProgressBar()
                             if(dataExpired) {
                                 Toast.makeText(requireContext(), requireContext().resources.getString(R.string.outdated_data), Toast.LENGTH_SHORT).show()
                             }
-                            showErrorLayout(it)
+                            showErrorLayout(message)
                         }
                     }
                 }
@@ -284,7 +285,7 @@ class CurrentWeather: Fragment() {
     }
 
     private fun checkPermissions() {
-        if(!permissionGranted(requireContext(), permissions)) {
+        if(!permissionsGranted(requireContext(), permissions)) {
             if(!preferencesManager.askedLocationPermission) {
                 requestPermissions.launch(permissions)
                 preferencesManager.askedLocationPermission = true
@@ -292,7 +293,7 @@ class CurrentWeather: Fragment() {
                 if(shouldShowRequestPermissionRationale(permissions[0]) || shouldShowRequestPermissionRationale(permissions[1])) {
                     requestPermissions.launch(permissions)
                 } else {
-                    val snackbar = Snackbar.make(binding.mainLayout, "App permission not granted", Snackbar.LENGTH_LONG)
+                    val snackbar = Snackbar.make(binding.mainLayout, requireContext().getString(R.string.permission_denied), Snackbar.LENGTH_LONG)
                         .setAction(this.resources.getString(R.string.settings)) {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                             val uri = Uri.fromParts("package", activity?.packageName, null)
@@ -309,15 +310,14 @@ class CurrentWeather: Fragment() {
         }
     }
 
-    private fun permissionGranted(context: Context, permissions: Array<String>): Boolean {
-        var hasAllPermissions = true
+    private fun permissionsGranted(context: Context, permissions: Array<String>): Boolean {
         for (permission in permissions) {
             val res = context.checkSelfPermission(permission)
             if (res != PackageManager.PERMISSION_GRANTED) {
-                hasAllPermissions = false
+                return false
             }
         }
-        return hasAllPermissions
+        return true
     }
 
 
@@ -326,6 +326,7 @@ class CurrentWeather: Fragment() {
         fusedClient.lastLocation.addOnSuccessListener { location ->
             if (isOnline(requireContext())) {
                 if (location != null) {
+                    showProgressBar()
                     manageLocationData(location)
                 } else {
                     mRequest = LocationRequest.create().apply {

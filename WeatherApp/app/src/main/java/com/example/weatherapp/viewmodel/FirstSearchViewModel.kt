@@ -7,8 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.R
 import com.example.weatherapp.model.db.MainDatabase
 import com.example.weatherapp.model.db.location.Location
+import com.example.weatherapp.model.db.saved.SavedResponse
 import com.example.weatherapp.model.repositories.ApiRepository
 import com.example.weatherapp.model.repositories.LocationRepository
+import com.example.weatherapp.model.repositories.SavedResponseRepository
 import com.example.weatherapp.utils.Constants
 import com.example.weatherapp.utils.Event
 import com.example.weatherapp.utils.isOnline
@@ -20,6 +22,7 @@ import kotlin.math.roundToInt
 class FirstSearchViewModel(application: Application): AndroidViewModel(application) {
     private val apiRepository = ApiRepository()
     private val locationRepository: LocationRepository
+    private val savedResponseRepository: SavedResponseRepository
 
     val shouldNavigate = MutableLiveData(false)
     val toastMessage = MutableLiveData<Event<String>>()
@@ -28,17 +31,26 @@ class FirstSearchViewModel(application: Application): AndroidViewModel(applicati
         val locationDao = MainDatabase.getDatabase(
             application
         ).locationDao()
-
+        val savedDao = MainDatabase.getDatabase(
+            application
+        ).savedDao()
         locationRepository = LocationRepository(locationDao)
+        savedResponseRepository = SavedResponseRepository(savedDao)
     }
 
     private fun addLocation(location: Location) {
         viewModelScope.launch {
-            locationRepository.add(location)
+            preferencesManager.locationId = locationRepository.add(location).toInt()
         }
     }
 
-    fun getCityDataToAddByName(name: String) {
+    private fun addWeatherResponse(savedResponse: SavedResponse) {
+        viewModelScope.launch {
+            savedResponseRepository.add(savedResponse)
+        }
+    }
+
+    fun getCityDataByName(name: String) {
         viewModelScope.launch {
             try {
                 if(isOnline(getApplication<Application>())) {
@@ -52,7 +64,7 @@ class FirstSearchViewModel(application: Application): AndroidViewModel(applicati
                         val lon = responseCityData.coord.lon
                         val isDay = responseCityData.weather[0].icon.last().toString() == "d"
 
-                        val responseWeatherData = apiRepository.getOneCall(lat, lon, Constants.EXCLUDE_ALERTS_HOURLY_MINUTELY)
+                        val responseWeatherData = apiRepository.getOneCall(lat, lon)
 
                         if(responseWeatherData.isSuccessful) {
                             val responseWeatherDataBody = responseWeatherData.body()!!
@@ -64,9 +76,11 @@ class FirstSearchViewModel(application: Application): AndroidViewModel(applicati
                             preferencesManager.useBackgroundDay = isDay
                             preferencesManager.timeZone = responseWeatherDataBody.timezone
 
+                            addWeatherResponse(SavedResponse(0, preferencesManager.locationId + 1, city, countryCode, responseWeatherDataBody))
+
                             addLocation(
                                 Location(0, city, countryCode, lat, lon, responseWeatherDataBody.current.dt, responseWeatherDataBody.current.temp.roundToInt(),
-                                    responseWeatherDataBody.daily[0].temp.max.roundToInt(), responseWeatherDataBody.daily[0].temp.min.roundToInt(), isDay)
+                                    responseWeatherDataBody.daily[0].temp.max.roundToInt(), responseWeatherDataBody.daily[0].temp.min.roundToInt(), isDay, 0)
                             )
 
                             shouldNavigate.postValue(true)
@@ -89,11 +103,11 @@ class FirstSearchViewModel(application: Application): AndroidViewModel(applicati
         }
     }
 
-    fun getCityDataToAddByCoord(lat: Double, lon: Double, city: String, countryCode: String) {
+    fun getCityDataByCoord(lat: Double, lon: Double, city: String, countryCode: String) {
         viewModelScope.launch {
             try {
                 if(isOnline(getApplication<Application>())) {
-                    val response = apiRepository.getOneCall(lat, lon, Constants.EXCLUDE_ALERTS_HOURLY_MINUTELY)
+                    val response = apiRepository.getOneCall(lat, lon)
                     if(response.isSuccessful) {
 
                         val responseCityData = response.body()!!
@@ -108,11 +122,12 @@ class FirstSearchViewModel(application: Application): AndroidViewModel(applicati
                         preferencesManager.useBackgroundDay = isDay
                         preferencesManager.timeZone = responseCityData.timezone
 
+                        addWeatherResponse(SavedResponse(0, preferencesManager.locationId + 1, city, countryCode, responseCityData))
+
                         addLocation(
                             Location(0, city, countryCode, lat, lon, currentData.dt, currentData.temp.roundToInt(),
-                                responseCityData.daily[0].temp.max.roundToInt(), responseCityData.daily[0].temp.min.roundToInt(), isDay)
+                                responseCityData.daily[0].temp.max.roundToInt(), responseCityData.daily[0].temp.min.roundToInt(), isDay, 0)
                         )
-
 
                         shouldNavigate.postValue(true)
                     } else {
@@ -131,4 +146,5 @@ class FirstSearchViewModel(application: Application): AndroidViewModel(applicati
             }
         }
     }
+
 }

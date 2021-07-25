@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
         if(preferencesManager.city!!.isEmpty()) {
             val intent = Intent(this, FirstSearch::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             startActivity(intent)
             finish()
         }

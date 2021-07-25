@@ -38,4 +38,5 @@ class CheckableImageView constructor(context: Context, attrs: AttributeSet): and
         }
         super.setOnClickListener(onClickListener)
     }
+
 }

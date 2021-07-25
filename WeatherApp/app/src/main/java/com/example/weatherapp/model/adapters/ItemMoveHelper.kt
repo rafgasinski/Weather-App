@@ -14,18 +14,22 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.example.weatherapp.R
 import com.example.weatherapp.utils.widgets.ActionButton
+import com.example.weatherapp.utils.widgets.ActionButtonClickListener
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 @SuppressLint("ClickableViewAccessibility")
-class ItemMoveHelper(private val adapter: LocationsListAdapter, private val recyclerView: RecyclerView, private val deleteButton: ActionButton) : ItemTouchHelper.Callback(){
+class ItemMoveHelper(private val recyclerView: RecyclerView, private val adapter: LocationsListAdapter) : ItemTouchHelper.Callback(){
 
-    private var swipePosition = -1
-    private var swipeThreshold = 0f
+    private lateinit var deleteButton: ActionButton
     private lateinit var gestureDetector: GestureDetector
-    private val buttonBuffer: MutableList<Int>
-    private var removerQueue: LinkedList<Int>
+    private var swipePosition = -1
+    private var swipeThreshold = 0.5f
+    private val buttonBuffer: MutableMap<Int, MutableList<ActionButton>>
+    private lateinit var removerQueue: LinkedList<Int>
 
     private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
@@ -46,11 +50,14 @@ class ItemMoveHelper(private val adapter: LocationsListAdapter, private val recy
         val rect = Rect()
         swipedItem.getGlobalVisibleRect(rect)
 
-        if(event.action == MotionEvent.ACTION_DOWN || event.action == MotionEvent.ACTION_MOVE || event.action == MotionEvent.ACTION_UP) {
+        if(event.action == MotionEvent.ACTION_DOWN || event.action == MotionEvent.ACTION_MOVE || event.action == MotionEvent.ACTION_UP
+            || event.action == MotionEvent.ACTION_CANCEL) {
             if(rect.top < point.y && rect.bottom > point.y) {
                 gestureDetector.onTouchEvent(event)
             } else {
-                startRecoverItem()
+                removerQueue.add(swipePosition)
+                swipePosition = -1
+                recoverItem()
             }
         }
         false
@@ -69,7 +76,7 @@ class ItemMoveHelper(private val adapter: LocationsListAdapter, private val recy
             val pos = removerQueue.poll()!!.toInt()
 
             if(pos > -1) {
-                recyclerView.adapter!!.notifyItemChanged(pos)
+                adapter.notifyItemChanged(pos)
             }
         }
     }
@@ -77,8 +84,18 @@ class ItemMoveHelper(private val adapter: LocationsListAdapter, private val recy
     init {
         gestureDetector = GestureDetector(recyclerView.context, gestureListener)
         recyclerView.setOnTouchListener(onTouchListener)
-        buttonBuffer = mutableListOf()
+        buttonBuffer = HashMap()
         removerQueue = IntLinkedList()
+        deleteButton =  ActionButton(recyclerView.context, R.drawable.ic_delete_row,
+            object : ActionButtonClickListener {
+                override fun onClick(pos: Int) {
+                    adapter.deleteLocation(pos)
+                }
+
+                override fun notHit(pos: Int) {
+                    startRecoverItem()
+                }
+            })
 
         attachToSwipe()
     }
@@ -138,6 +155,7 @@ class ItemMoveHelper(private val adapter: LocationsListAdapter, private val recy
         }
 
         swipePosition = pos
+
         buttonBuffer.clear()
         swipeThreshold = 0.5f * buttonWidth.toFloat()
         recoverItem()
@@ -160,11 +178,11 @@ class ItemMoveHelper(private val adapter: LocationsListAdapter, private val recy
     }
 
     override fun getSwipeEscapeVelocity(defaultValue: Float): Float {
-        return 0.1f * defaultValue
+        return 0.15f * defaultValue
     }
 
     override fun getSwipeVelocityThreshold(defaultValue: Float): Float {
-        return 5.0f * defaultValue
+        return 5f * defaultValue
     }
 
     override fun getMovementFlags(
@@ -195,7 +213,16 @@ class ItemMoveHelper(private val adapter: LocationsListAdapter, private val recy
 
         if(actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             if(dX < 0) {
-                translationX = dX * buttonWidth.toFloat() / itemView.width * 1.1f
+                var buffer: MutableList<ActionButton> = ArrayList()
+
+                if(!buttonBuffer.containsKey(pos)) {
+                    buffer.add(deleteButton)
+                    buttonBuffer[pos] = buffer
+                } else {
+                    buffer = buttonBuffer[pos]!!
+                }
+
+                translationX = dX * buffer.size.toFloat() * buttonWidth.toFloat() / itemView.width * 1.1f
                 drawButton(c, itemView, translationX, pos)
             }
         }

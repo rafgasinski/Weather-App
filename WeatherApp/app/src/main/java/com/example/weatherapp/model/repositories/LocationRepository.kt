@@ -16,20 +16,20 @@ class LocationRepository(private val locationDao: LocationDao) {
         return locationDao.getLocation(city, countryCode)
     }
 
-    suspend fun getMaxId() : List<Int> {
-        return locationDao.getMaxId()
+    suspend fun getMaxOrder() : List<Int> {
+        return locationDao.getMaxOrder()
     }
 
-    suspend fun add(location: Location){
-        locationDao.add(location)
-    }
-
-    suspend fun delete(location: Location){
-        locationDao.delete(location)
+    suspend fun add(location: Location): Long {
+        return locationDao.add(location)
     }
 
     suspend fun update(location: LocationUpdate){
         locationDao.update(location)
+    }
+
+    suspend fun delete(location: Location){
+        locationDao.delete(location)
     }
 
     suspend fun updateList(locationList: List<Location>){

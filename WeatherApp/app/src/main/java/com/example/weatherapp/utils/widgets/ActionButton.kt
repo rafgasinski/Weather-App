@@ -18,7 +18,7 @@ class ActionButton(context: Context, drawableId: Int, private val listener: Acti
 
     init {
         val value = TypedValue()
-        context.theme.resolveAttribute(R.attr.colorPrimaryDark, value, true)
+        context.theme.resolveAttribute(R.attr.colorPrimary, value, true)
         p.color = value.data
         d = ContextCompat.getDrawable(context, drawableId)
     }
@@ -26,19 +26,23 @@ class ActionButton(context: Context, drawableId: Int, private val listener: Acti
     fun onClick(x: Float, y: Float) : Boolean {
         if(clickRegion != null && clickRegion!!.contains(x, y)){
             listener.onClick(pos)
+        } else if (clickRegion != null && !clickRegion!!.contains(x, y)) {
+            listener.notHit(pos)
         }
         return true
     }
 
     fun onDraw(c: Canvas, rectF: RectF, pos: Int) {
 
-        c.drawRect(rectF, p)
-
         val bitmap = drawableToBitmap(d)
-        c.drawBitmap(bitmap, (rectF.left + 30f + rectF.right)/2-bitmap.width /2, (rectF.top + rectF.bottom)/2-bitmap.height /2, p)
+
+        val left = (rectF.left + 30f + rectF.right)/2-bitmap.width /2
+        val top = (rectF.top + rectF.bottom)/2-bitmap.height /2
+
+        c.drawBitmap(bitmap, left, top, p)
 
         this.pos = pos
-        clickRegion = rectF
+        clickRegion = RectF(left, top, left + d!!.intrinsicWidth, top + d!!.intrinsicHeight)
     }
 
     private fun drawableToBitmap(d: Drawable?) : Bitmap {

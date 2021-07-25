@@ -13,9 +13,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
-import android.view.*
+import android.view.View
 import android.view.animation.AnimationUtils
-import android.widget.ImageView
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -52,14 +52,14 @@ class FirstSearch: AppCompatActivity() {
 
     private val requestPermissions =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            var hasAllPermissions = true
+            var permissionsGranted = true
             for (permission in permissions) {
                 if(!permission.value) {
-                    hasAllPermissions = false
+                    permissionsGranted = false
                 }
             }
 
-            if(hasAllPermissions) {
+            if(permissionsGranted) {
                 getLocation()
             }
         }
@@ -113,8 +113,11 @@ class FirstSearch: AppCompatActivity() {
                 object : SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(textInput: String?): Boolean {
                         textInput?.let {
-                            firstSearchViewModel.getCityDataToAddByName(textInput)
-                            showOverlay()
+                            firstSearchViewModel.getCityDataByName(textInput)
+
+                            fusedClient.removeLocationUpdates(mCallback)
+                            enableSearchView(binding.searchView, false)
+                            hideProgressBar()
                         }
                         return false
                     }
@@ -137,11 +140,15 @@ class FirstSearch: AppCompatActivity() {
         }
 
         binding.location.setOnClickListener {
+            it.isEnabled = false
             checkPermissions()
+            it?.postDelayed({ it.isEnabled = true }, 500)
         }
 
         firstSearchViewModel.shouldNavigate.observe(this, { shouldNavigate ->
             if(shouldNavigate) {
+                hideSoftInput()
+
                 val intent = Intent(this, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
@@ -152,8 +159,9 @@ class FirstSearch: AppCompatActivity() {
 
         firstSearchViewModel.toastMessage.observe(this, { event ->
             event?.getContentIfNotHandledOrReturnNull()?.let {
-                hideOverlay()
+                hideProgressBar()
                 Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                enableSearchView(binding.searchView, true)
             }
         })
     }
@@ -163,7 +171,7 @@ class FirstSearch: AppCompatActivity() {
     }
 
     private fun checkPermissions() {
-        if(!permissionGranted(this, permissions)) {
+        if(!permissionsGranted(this, permissions)) {
             if(!preferencesManager.askedLocationPermission) {
                 requestPermissions.launch(permissions)
                 preferencesManager.askedLocationPermission = true
@@ -171,7 +179,7 @@ class FirstSearch: AppCompatActivity() {
                 if(shouldShowRequestPermissionRationale(permissions[0]) || shouldShowRequestPermissionRationale(permissions[1])) {
                     requestPermissions.launch(permissions)
                 } else {
-                    val snackbar = Snackbar.make(binding.mainLayout, "App permission not granted", Snackbar.LENGTH_LONG)
+                    val snackbar = Snackbar.make(binding.mainLayout, this.getString(R.string.permission_denied), Snackbar.LENGTH_LONG)
                         .setAction(this.resources.getString(R.string.settings)) {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                             val uri = Uri.fromParts("package", this.packageName, null)
@@ -188,16 +196,15 @@ class FirstSearch: AppCompatActivity() {
         }
     }
 
-    private fun permissionGranted(context: Context, permissions: Array<String>): Boolean {
-        var hasAllPermissions = true
+    private fun permissionsGranted(context: Context, permissions: Array<String>): Boolean {
         for (permission in permissions) {
             val res = context.checkSelfPermission(permission)
 
             if (res != PackageManager.PERMISSION_GRANTED) {
-                hasAllPermissions = false
+               return false
             }
         }
-        return hasAllPermissions
+        return true
     }
 
     @SuppressLint("MissingPermission")
@@ -205,6 +212,7 @@ class FirstSearch: AppCompatActivity() {
         fusedClient.lastLocation.addOnSuccessListener { location ->
             if (isOnline(this)) {
                 if (location != null) {
+                    showProgressBar()
                     manageLocationData(location)
                 } else {
                     mRequest = LocationRequest.create().apply {
@@ -224,6 +232,7 @@ class FirstSearch: AppCompatActivity() {
                         if (e is ResolvableApiException) {
                             try {
                                 e.startResolutionForResult(this, LOCATION_SETTINGS_REQUEST)
+                                hideSoftInput()
                             } catch (sendEx: IntentSender.SendIntentException) {}
                         }
                     }
@@ -236,29 +245,24 @@ class FirstSearch: AppCompatActivity() {
         }
     }
 
-    private fun showOverlay() {
-        binding.overlay.visibility = View.VISIBLE
-    }
-
-    private fun hideOverlay() {
-        binding.overlay.visibility = View.GONE
-    }
-
     private fun showProgressBar() {
         binding.location.visibility = View.INVISIBLE
         binding.locationProgressBar.visibility = View.VISIBLE
-        binding.overlay.visibility = View.VISIBLE
     }
 
     private fun hideProgressBar() {
         binding.location.visibility = View.VISIBLE
         binding.locationProgressBar.visibility = View.GONE
-        binding.overlay.visibility = View.GONE
+    }
+
+    private fun hideSoftInput() {
+        this.currentFocus?.let { view ->
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.hideSoftInputFromWindow(view.windowToken, 0)
+        }
     }
 
     private fun manageLocationData(location: Location) {
-        showProgressBar()
-
         val lat = location.latitude
         val lon = location.longitude
 
@@ -266,9 +270,11 @@ class FirstSearch: AppCompatActivity() {
         val addresses: List<Address>? = gcd.getFromLocation(lat, lon, 1)
         addresses?.let {
             if (addresses.isNotEmpty()) {
-                firstSearchViewModel.getCityDataToAddByCoord(lat, lon, addresses[0].locality, addresses[0].countryCode)
+                firstSearchViewModel.getCityDataByCoord(lat, lon, addresses[0].locality, addresses[0].countryCode)
+            } else {
+                Toast.makeText(this, this.getText(R.string.unknown_location), Toast.LENGTH_SHORT).show()
             }
         }
-
     }
+
 }

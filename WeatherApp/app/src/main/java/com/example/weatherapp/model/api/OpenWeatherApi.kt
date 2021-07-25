@@ -55,4 +55,5 @@ interface OpenWeatherApi {
                 .create(OpenWeatherApi::class.java)
         }
     }
+
 }

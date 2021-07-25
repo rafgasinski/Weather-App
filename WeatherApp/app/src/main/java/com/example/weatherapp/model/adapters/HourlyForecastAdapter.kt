@@ -25,7 +25,6 @@ class HourlyForecastAdapter: RecyclerView.Adapter<HourlyForecastAdapter.Holder>(
                 binding.hourlyTime.text = context.resources.getString(R.string.now)
             }
         }
-
     }
 
     override  fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder{
@@ -45,4 +44,5 @@ class HourlyForecastAdapter: RecyclerView.Adapter<HourlyForecastAdapter.Holder>(
         hourlyDataList = data
         notifyDataSetChanged()
     }
+
 }

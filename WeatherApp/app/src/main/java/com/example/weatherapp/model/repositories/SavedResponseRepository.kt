@@ -7,12 +7,12 @@ import com.example.weatherapp.model.response.onecall.OneCallResponse
 
 class SavedResponseRepository(private val savedResponseDao: SavedResponseDao) {
 
-    fun observeSavedWeather(city: String, countryCode: String) : LiveData<OneCallResponse> {
-        return savedResponseDao.observeSavedWeather(city, countryCode)
+    fun observeSavedResponse(city: String, countryCode: String) : LiveData<OneCallResponse> {
+        return savedResponseDao.observedSavedResponse(city, countryCode)
     }
 
-    suspend fun getSavedWeather(city: String, countryCode: String) : List<Int> {
-        return savedResponseDao.getSavedWeather(city, countryCode)
+    suspend fun getSavedResponse(city: String, countryCode: String) : List<Int> {
+        return savedResponseDao.getSavedResponse(city, countryCode)
     }
 
     suspend fun add(savedResponse: SavedResponse){
@@ -25,6 +25,10 @@ class SavedResponseRepository(private val savedResponseDao: SavedResponseDao) {
 
     suspend fun delete(city: String, countryCode: String){
         savedResponseDao.delete(city, countryCode)
+    }
+
+    suspend fun deleteMultiple(locationIdList: List<Int>){
+        savedResponseDao.deleteMultiple(locationIdList)
     }
 
 }

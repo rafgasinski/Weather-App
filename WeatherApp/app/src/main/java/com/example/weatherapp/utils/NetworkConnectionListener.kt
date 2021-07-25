@@ -50,25 +50,4 @@ class NetworkConnectionListener(val context: Context) : LiveData<Boolean>() {
         }
     }
 
-    /*inner class ConnectionStateMonitor : NetworkCallback() {
-        private val networkRequest: NetworkRequest = NetworkRequest.Builder()
-            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
-            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-            .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
-            .build()
-
-        fun enable() {
-            connectivityManager.registerNetworkCallback(networkRequest, this)
-        }
-
-        override fun onAvailable(network: Network) {
-            postValue(true)
-        }
-
-        override fun onLost(network: Network) {
-            postValue(false)
-        }
-
-    }*/
-
 }

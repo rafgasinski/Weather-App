@@ -1,6 +1,5 @@
 package com.example.weatherapp.model.adapters
 
-import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +14,6 @@ class DailyForecastAdapter: RecyclerView.Adapter<DailyForecastAdapter.Holder>() 
         fun bind(daily: Daily) {
             binding.daily = daily
         }
-
     }
 
     override  fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder{
@@ -27,7 +25,6 @@ class DailyForecastAdapter: RecyclerView.Adapter<DailyForecastAdapter.Holder>() 
         return dailyDataList.size
     }
 
-    @SuppressLint("SimpleDateFormat")
     override fun onBindViewHolder(holder: Holder, position: Int) {
         holder.bind(dailyDataList[position])
 
@@ -37,4 +34,5 @@ class DailyForecastAdapter: RecyclerView.Adapter<DailyForecastAdapter.Holder>() 
         dailyDataList = data
         notifyDataSetChanged()
     }
+
 }

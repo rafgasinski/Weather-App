@@ -24,8 +24,6 @@ class CurrentWeatherViewModel(application: Application): AndroidViewModel(applic
     val responseData: MutableLiveData<Resource<OneCallResponse>> = MutableLiveData()
     val savedWeatherData: LiveData<OneCallResponse>
 
-    private val preferencesManager = PreferencesManager.getInstance()
-
     init {
         val locationDao = MainDatabase.getDatabase(
             application
@@ -36,12 +34,12 @@ class CurrentWeatherViewModel(application: Application): AndroidViewModel(applic
         locationRepository = LocationRepository(locationDao)
         savedResponseRepository = SavedResponseRepository(savedDao)
 
-        savedWeatherData = savedResponseRepository.observeSavedWeather(preferencesManager.city!!, preferencesManager.countryCode!!)
+        savedWeatherData = savedResponseRepository.observeSavedResponse(preferencesManager.city!!, preferencesManager.countryCode!!)
     }
 
     private fun addLocation(location: Location) {
         viewModelScope.launch {
-            locationRepository.add(location)
+            preferencesManager.locationId = locationRepository.add(location).toInt()
         }
     }
 
@@ -51,11 +49,11 @@ class CurrentWeatherViewModel(application: Application): AndroidViewModel(applic
         }
     }
 
-    fun upsertLastWeatherResponse(savedResponse: SavedResponse) {
+    fun upsertWeatherResponse(savedResponse: SavedResponse) {
         viewModelScope.launch {
             var dbData = listOf<Int>()
             launch {
-                dbData = savedResponseRepository.getSavedWeather(savedResponse.city, savedResponse.countryCode)
+                dbData = savedResponseRepository.getSavedResponse(savedResponse.city, savedResponse.countryCode)
             }.join()
 
             viewModelScope.launch {
@@ -64,6 +62,37 @@ class CurrentWeatherViewModel(application: Application): AndroidViewModel(applic
                 } else {
                     savedResponseRepository.update(savedResponse.city, savedResponse.countryCode, savedResponse.oneCallResponse)
                 }
+            }
+        }
+    }
+
+    private fun upsertLocation(location: Location) {
+        viewModelScope.launch {
+            var dbData = listOf<Int>()
+            launch {
+                dbData = locationRepository.getLocation(location.city, location.countryCode)
+            }.join()
+
+            if(dbData.isEmpty()) {
+                var maxOrderList = listOf<Int>()
+                var maxOrder = 0
+                launch {
+                    maxOrderList = locationRepository.getMaxOrder()
+                }.join()
+
+                if(maxOrderList.isNotEmpty()) {
+                    maxOrder = maxOrderList.first()
+                    maxOrder++
+                }
+
+                addLocation(
+                    Location(0, location.city, location.countryCode, location.lat, location.lon, location.dt, location.currentTemp,
+                        location.tempMax, location.tempMin, location.isDay, maxOrder)
+                )
+
+            } else {
+                updateLocation(LocationUpdate(location.id, location.dt, location.currentTemp,
+                    location.tempMax, location.tempMin, location.isDay))
             }
         }
     }
@@ -125,37 +154,9 @@ class CurrentWeatherViewModel(application: Application): AndroidViewModel(applic
                         preferencesManager.countryCode = countryCode
                         preferencesManager.lat = lat
                         preferencesManager.lon = lon
-                        preferencesManager.useBackgroundDay = responseIsDay
-                        preferencesManager.timeZone = responseCityData.timezone
 
-                        var dbData = listOf<Int>()
-                        launch {
-                            dbData = locationRepository.getLocation(city, countryCode)
-                        }.join()
-
-                        if(dbData.isEmpty()) {
-                            var maxIdList = listOf<Int>()
-                            var id = 0
-                            launch {
-                                maxIdList = locationRepository.getMaxId()
-                            }.join()
-
-                            if(maxIdList.isNotEmpty()) {
-                                id = maxIdList.first()
-                                id++
-                            }
-
-                            preferencesManager.locationId = id
-
-                            addLocation(
-                                Location(id, city, countryCode, lat, lon, responseCurrentDt, responseCurrentTemp,
-                                    responseTempMax, responseTempMin, responseIsDay)
-                            )
-
-                        } else {
-                            updateLocation(LocationUpdate(preferencesManager.locationId, responseCurrentDt, responseCurrentTemp,
-                                responseTempMax, responseTempMin, responseIsDay))
-                        }
+                        upsertLocation(Location(preferencesManager.locationId, city, countryCode, lat, lon, responseCurrentDt,
+                            responseCurrentTemp, responseTempMax, responseTempMin, responseIsDay, 0))
 
                         responseData.postValue(Resource.Success(responseCityData))
                     } else {

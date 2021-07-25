@@ -9,14 +9,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.weatherapp.FirstSearch
-import com.example.weatherapp.R
 import com.example.weatherapp.databinding.FragmentLocationsListBinding
 import com.example.weatherapp.model.adapters.ItemMoveHelper
 import com.example.weatherapp.model.adapters.LocationsListAdapter
 import com.example.weatherapp.model.db.location.Location
 import com.example.weatherapp.utils.*
-import com.example.weatherapp.utils.widgets.ActionButton
-import com.example.weatherapp.utils.widgets.ActionButtonClickListener
 import com.example.weatherapp.viewmodel.LocationsListViewModel
 import java.util.*
 
@@ -51,7 +48,7 @@ class LocationsList: Fragment() {
         networkConnection.observe(viewLifecycleOwner, { connected ->
             if(connected) {
                 handler.postDelayed({
-                    locationsListViewModel.updateList()
+                    locationsListViewModel.updateLocationsData()
                 }, 300)
             }
         })
@@ -75,7 +72,6 @@ class LocationsList: Fragment() {
                 preferencesManager.lat = location.lat
                 preferencesManager.lon = location.lon
             } else if(locationList.isEmpty()) {
-                preferencesManager.locationId = 0
                 preferencesManager.city = ""
                 preferencesManager.countryCode = ""
                 preferencesManager.lat = 0.0
@@ -91,14 +87,7 @@ class LocationsList: Fragment() {
             adapterLocationsList.setData(locationList as ArrayList<Location>)
         })
 
-        val itemMoveHelper = ItemMoveHelper(adapterLocationsList, binding.locationsRecyclerView,
-            ActionButton(requireContext(), R.drawable.ic_delete_row,
-            object : ActionButtonClickListener {
-                override fun onClick(pos: Int) {
-                    adapterLocationsList.deleteItem(pos)
-                }
-            })
-        )
+        val itemMoveHelper = ItemMoveHelper(binding.locationsRecyclerView, adapterLocationsList)
 
         binding.searchView.apply {
             setOnQueryTextListener(

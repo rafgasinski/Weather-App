@@ -25,4 +25,5 @@ class LocationsDiffCallback(private val oldList: ArrayList<Location>, private va
     override fun getChangePayload(oldPosition: Int, newPosition: Int): Any? {
         return super.getChangePayload(oldPosition, newPosition)
     }
+
 }

@@ -11,19 +11,23 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.findNavController
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import com.example.weatherapp.R
 import com.example.weatherapp.databinding.ItemLocationBinding
 import com.example.weatherapp.model.db.location.Location
-import com.example.weatherapp.utils.widgets.CheckableImageView
+import com.example.weatherapp.utils.enableSearchView
 import com.example.weatherapp.utils.preferencesManager
+import com.example.weatherapp.utils.widgets.CheckableImageView
 import com.example.weatherapp.viewmodel.LocationsListViewModel
 import java.util.*
 
 
 class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, val searchView: androidx.appcompat.widget.SearchView): RecyclerView.Adapter<LocationsListAdapter.Holder>() {
+
+    private val payloadActionModeOn = "payload_action_mode_on"
+    private val payloadActionModeOff = "payload_action_mode_off"
+    private val payloadSelectAll = "payload_select_all"
+    private val payloadUnselectAll = "payload_unselect_all"
 
     private lateinit var mRecyclerView: RecyclerView
 
@@ -48,18 +52,20 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
     inner class Holder(private val binding: ItemLocationBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        val checkbox = binding.checkbox
+        val handle = binding.dragHandle
+
         @SuppressLint("ClickableViewAccessibility")
         fun bind(location: Location, context: Context) {
             binding.location = location
 
-            binding.root.background =
-                if (location.isDay) {
-                    ContextCompat.getDrawable(context, R.drawable.round_corners_day)
-                } else {
-                    ContextCompat.getDrawable(context, R.drawable.round_corners_night)
-                }
+            binding.root.background = if(location.isDay) {
+                ContextCompat.getDrawable(context, R.drawable.round_corners_day)
+            } else {
+                ContextCompat.getDrawable(context, R.drawable.round_corners_night)
+            }
 
-            if (location.city == currentCity && location.countryCode == currentCountryCode) {
+            if(location.city == currentCity && location.countryCode == currentCountryCode) {
                 binding.locationName.setCompoundDrawablesWithIntrinsicBounds(
                     null,
                     null,
@@ -99,18 +105,10 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
                 }
             }
 
-            if (actionModeEnabled) {
+            if(actionModeEnabled) {
                 binding.checkbox.visibility = View.VISIBLE
                 binding.dragHandle.visibility = View.VISIBLE
-
                 binding.checkbox.isChecked = allSelected
-
-                if(firstClickedItem != null && itemClicked) {
-                    if(location == firstClickedItem){
-                        clickItem(binding.checkbox, location)
-                        itemClicked = false
-                    }
-                }
             } else {
                 binding.checkbox.isChecked = false
                 binding.checkbox.visibility = View.GONE
@@ -118,7 +116,7 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
             }
 
             binding.root.setOnClickListener { view ->
-                if (actionModeEnabled) {
+                if(actionModeEnabled) {
                     clickItem(binding.checkbox, location)
                 } else {
                     preferencesManager.locationId = location.id
@@ -145,7 +143,7 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
                             override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
                                 firstClickedItem = location
                                 itemClicked = true
-                                notifyDataSetChanged()
+                                notifyItemRangeChanged(0, itemCount, payloadActionModeOn)
 
                                 selectedListSize.observe(context as LifecycleOwner, {
                                     mode?.title = String.format(context.resources.getString(R.string.val_selected), it)
@@ -187,14 +185,17 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
                                             allSelected = false
                                             selectedList.clear()
                                             selectedListSize.postValue(0)
+
+                                            notifyItemRangeChanged(0, itemCount, payloadUnselectAll)
                                         } else {
                                             allSelected = true
                                             selectedList.clear()
                                             selectedList.addAll(locationsList)
                                             selectedListSize.postValue(selectedList.size)
+
+                                            notifyItemRangeChanged(0, itemCount, payloadSelectAll)
                                         }
 
-                                        notifyDataSetChanged()
                                     }
 
                                     R.id.delete -> {
@@ -210,6 +211,8 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
                             }
 
                             override fun onDestroyActionMode(mode: ActionMode?) {
+                                locationsListViewModel.updateList(locationsList)
+
                                 actionModeEnabled = false
                                 allSelected = false
 
@@ -220,7 +223,7 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
                                     enableSearchView(searchView, true)
                                 }
 
-                                notifyDataSetChanged()
+                                notifyItemRangeChanged(0, itemCount, payloadActionModeOff)
                             }
 
                         }
@@ -262,6 +265,41 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
         holder.bind(locationsList[position], holder.itemView.context)
     }
 
+    override fun onBindViewHolder(holder: Holder, position: Int, payloads: List<Any>) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+        } else {
+            for (payload in payloads) {
+                when(payload) {
+                    payloadActionModeOn -> {
+                        holder.checkbox.visibility = View.VISIBLE
+                        holder.handle.visibility = View.VISIBLE
+                        holder.checkbox.isChecked = allSelected
+
+                        if(locationsList[position] == firstClickedItem && itemClicked) {
+                            clickItem(holder.checkbox, locationsList[position])
+                            itemClicked = false
+                        }
+                    }
+
+                    payloadActionModeOff -> {
+                        holder.checkbox.visibility = View.GONE
+                        holder.handle.visibility = View.GONE
+                        holder.checkbox.isChecked = false
+                    }
+
+                    payloadSelectAll -> {
+                        holder.checkbox.isChecked = true
+                    }
+
+                    payloadUnselectAll -> {
+                        holder.checkbox.isChecked = false
+                    }
+                }
+            }
+        }
+    }
+
     private fun clickItem(checkbox: CheckableImageView, location: Location) {
         if(checkbox.isChecked) {
             checkbox.isChecked = false
@@ -275,7 +313,7 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
 
     }
 
-    fun deleteItem(position: Int) {
+    fun deleteLocation(position: Int) {
         locationsListViewModel.deleteLocation(locationsList[position])
     }
 
@@ -300,16 +338,6 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
         touchHelper = helper
     }
 
-    private fun enableSearchView(view: View, enabled: Boolean) {
-        view.isEnabled = enabled
-        if (view is ViewGroup) {
-            for (i in 0 until view.childCount) {
-                val child = view.getChildAt(i)
-                enableSearchView(child, enabled)
-            }
-        }
-    }
-
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         mRecyclerView = recyclerView
@@ -319,22 +347,21 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
         if (oldPosition < newPosition) {
             for (i in oldPosition until newPosition) {
                 Collections.swap(locationsList, i, i + 1)
-                val order1: Int = locationsList[i].id
-                val order2: Int = locationsList[i + 1].id
-                locationsList[i].id = order2
-                locationsList[i + 1].id = order1
+                val order1: Int = locationsList[i].order
+                val order2: Int = locationsList[i + 1].order
+                locationsList[i].order = order2
+                locationsList[i + 1].order = order1
             }
         } else {
             for (i in oldPosition downTo newPosition + 1) {
                 Collections.swap(locationsList, i, i - 1)
-                val order1: Int = locationsList[i].id
-                val order2: Int = locationsList[i - 1].id
-                locationsList[i].id = order2
-                locationsList[i - 1].id = order1
+                val order1: Int = locationsList[i].order
+                val order2: Int = locationsList[i - 1].order
+                locationsList[i].order = order2
+                locationsList[i - 1].order = order1
             }
         }
 
-        locationsListViewModel.updateList(locationsList)
         notifyItemMoved(oldPosition, newPosition)
     }
 

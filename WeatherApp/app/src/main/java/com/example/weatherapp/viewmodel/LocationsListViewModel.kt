@@ -23,12 +23,12 @@ import java.io.IOException
 class LocationsListViewModel(application: Application): AndroidViewModel(application) {
     private val apiRepository = ApiRepository()
     private val locationRepository: LocationRepository
-    private val savedForecastWeatherResponseRepository: SavedResponseRepository
+    private val savedResponseRepository: SavedResponseRepository
 
     val toastMessage = MutableLiveData<Event<String>>()
     val allLocationsLiveData = MutableLiveData<List<Location>>()
 
-    private var maxId = 0
+    private var maxOrder = 0
 
     private var allLocations: List<Location> = listOf()
 
@@ -40,7 +40,7 @@ class LocationsListViewModel(application: Application): AndroidViewModel(applica
             application
         ).savedDao()
         locationRepository = LocationRepository(locationDao)
-        savedForecastWeatherResponseRepository = SavedResponseRepository(savedDao)
+        savedResponseRepository = SavedResponseRepository(savedDao)
 
         viewModelScope.launch {
             locationRepository.selectAllAsFlow.collect {
@@ -49,7 +49,7 @@ class LocationsListViewModel(application: Application): AndroidViewModel(applica
         }
     }
 
-    fun updateList() {
+    fun updateLocationsData() {
         viewModelScope.launch {
             launch {
                 allLocations = locationRepository.selectAll()
@@ -58,7 +58,7 @@ class LocationsListViewModel(application: Application): AndroidViewModel(applica
             if(isOnline(getApplication<Application>())) {
                 allLocations.forEachIndexed { index, location ->
                     if(index == 0){
-                        maxId = location.id
+                        maxOrder = location.order
                     }
                     getCityDataUpdate(location)
                 }
@@ -72,15 +72,7 @@ class LocationsListViewModel(application: Application): AndroidViewModel(applica
         }
     }
 
-    fun deleteLocation(location: Location) {
-        viewModelScope.launch {
-            maxId--
-            locationRepository.delete(location)
-            savedForecastWeatherResponseRepository.delete(location.city, location.countryCode)
-        }
-    }
-
-    private fun update(location: LocationUpdate) {
+    private fun updateLocation(location: LocationUpdate) {
         viewModelScope.launch {
             locationRepository.update(location)
         }
@@ -92,14 +84,20 @@ class LocationsListViewModel(application: Application): AndroidViewModel(applica
         }
     }
 
+    fun deleteLocation(location: Location) {
+        viewModelScope.launch {
+            locationRepository.delete(location)
+            savedResponseRepository.delete(location.city, location.countryCode)
+        }
+    }
+
     fun deleteMultiple(locationList: List<Location>) {
         viewModelScope.launch {
-            maxId -= locationList.size
-            locationRepository.deleteMultiple(locationList.map { it.id })
-            locationList.forEach { location ->
-                savedForecastWeatherResponseRepository.delete(location.city, location.countryCode)
-            }
+            val idList = locationList.map { it.id }
+            savedResponseRepository.deleteMultiple(idList)
+            locationRepository.deleteMultiple(idList)
         }
+
     }
 
     fun getCityDataAdd(name: String) {
@@ -123,8 +121,8 @@ class LocationsListViewModel(application: Application): AndroidViewModel(applica
 
                             if(allLocationsLiveData.value?.any { it.city == city && it.countryCode == countryCode} == false) {
                                 addLocation(
-                                    Location(++maxId, city, countryCode, lat, lon, responseWeatherDataBody.current.dt, responseWeatherDataBody.current.temp.roundToInt(),
-                                        responseWeatherDataBody.daily[0].temp.max.roundToInt(), responseWeatherDataBody.daily[0].temp.min.roundToInt(), isDay)
+                                    Location(0, city, countryCode, lat, lon, responseWeatherDataBody.current.dt, responseWeatherDataBody.current.temp.roundToInt(),
+                                        responseWeatherDataBody.daily[0].temp.max.roundToInt(), responseWeatherDataBody.daily[0].temp.min.roundToInt(), isDay, ++maxOrder)
                                 )
                             } else {
                                 toastMessage.postValue(Event(getApplication<Application>().resources.getString(R.string.already_added)))
@@ -165,7 +163,7 @@ class LocationsListViewModel(application: Application): AndroidViewModel(applica
                                 || location.tempMax != responseTempMax
                                 || location.tempMin != responseTempMin
                                 || location.isDay != responseIsDay) {
-                                update(LocationUpdate(location.id, responseCurrentDt, responseCurrentTemp, responseTempMax, responseTempMin, responseIsDay))
+                                updateLocation(LocationUpdate(location.id, responseCurrentDt, responseCurrentTemp, responseTempMax, responseTempMin, responseIsDay))
                             }
                         }
                     }

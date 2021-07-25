@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "locations_table")
 data class Location(
-    @PrimaryKey var id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int,
     val city: String,
     val countryCode: String,
     val lat: Double,
@@ -15,6 +15,7 @@ data class Location(
     val tempMax: Int,
     val tempMin: Int,
     val isDay: Boolean,
+    var order: Int
 )
 
 data class LocationUpdate(

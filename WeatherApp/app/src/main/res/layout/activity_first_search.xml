@@ -21,20 +21,21 @@
             app:iconifiedByDefault="false"
             app:queryHint="@string/search_location"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <ImageButton
             android:id="@+id/location"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="0dp"
             android:src="@drawable/ic_location"
             app:tint="?colorControlNormal"
-            android:background="@null"
-            android:scaleType="fitCenter"
+            android:background="?selectableItemBackgroundBorderless"
             android:contentDescription="@string/use_location"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/search_view"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <ProgressBar
             android:id="@+id/location_progress_bar"
@@ -62,12 +63,5 @@
         android:textSize="24sp"
         android:textStyle="bold"
         app:drawableTopCompat="@drawable/ic_logo"/>
-
-    <FrameLayout
-        android:id="@+id/overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:animateLayoutChanges="true"
-        android:visibility="gone"/>
 
 </RelativeLayout>

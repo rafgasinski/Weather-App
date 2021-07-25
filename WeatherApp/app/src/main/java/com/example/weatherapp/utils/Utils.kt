@@ -7,6 +7,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities.*
 import android.os.Build
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowInsetsController
 import android.widget.ImageView
 import android.widget.TextView
@@ -196,6 +197,16 @@ fun adjustTheme(context: Context, activity: FragmentActivity) {
             } else {
                 View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             }
+        }
+    }
+}
+
+fun enableSearchView(view: View, enabled: Boolean) {
+    view.isEnabled = enabled
+    if (view is ViewGroup) {
+        for (i in 0 until view.childCount) {
+            val child = view.getChildAt(i)
+            enableSearchView(child, enabled)
         }
     }
 }
