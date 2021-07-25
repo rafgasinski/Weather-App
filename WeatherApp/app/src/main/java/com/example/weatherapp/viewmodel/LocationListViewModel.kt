@@ -20,7 +20,7 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collect
 import java.io.IOException
 
-class LocationsListViewModel(application: Application): AndroidViewModel(application) {
+class LocationListViewModel(application: Application): AndroidViewModel(application) {
     private val apiRepository = ApiRepository()
     private val locationRepository: LocationRepository
     private val savedResponseRepository: SavedResponseRepository

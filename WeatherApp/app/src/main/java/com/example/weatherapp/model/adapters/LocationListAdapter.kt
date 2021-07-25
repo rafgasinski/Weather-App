@@ -18,11 +18,11 @@ import com.example.weatherapp.model.db.location.Location
 import com.example.weatherapp.utils.enableSearchView
 import com.example.weatherapp.utils.preferencesManager
 import com.example.weatherapp.utils.widgets.CheckableImageView
-import com.example.weatherapp.viewmodel.LocationsListViewModel
+import com.example.weatherapp.viewmodel.LocationListViewModel
 import java.util.*
 
 
-class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, val searchView: androidx.appcompat.widget.SearchView): RecyclerView.Adapter<LocationsListAdapter.Holder>() {
+class LocationListAdapter(val locationListViewModel: LocationListViewModel, val searchView: androidx.appcompat.widget.SearchView): RecyclerView.Adapter<LocationListAdapter.Holder>() {
 
     private val payloadActionModeOn = "payload_action_mode_on"
     private val payloadActionModeOff = "payload_action_mode_off"
@@ -125,7 +125,7 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
                     preferencesManager.lat = location.lat
                     preferencesManager.lon = location.lon
 
-                    view.findNavController().navigate(R.id.action_locationsList_to_currentWeather)
+                    view.findNavController().navigate(R.id.action_locationList_to_currentWeather)
                 }
             }
 
@@ -199,7 +199,7 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
                                     }
 
                                     R.id.delete -> {
-                                        locationsListViewModel.deleteMultiple(selectedList)
+                                        locationListViewModel.deleteMultiple(selectedList)
 
                                         allSelected = false
                                         selectedList.clear()
@@ -211,7 +211,7 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
                             }
 
                             override fun onDestroyActionMode(mode: ActionMode?) {
-                                locationsListViewModel.updateList(locationsList)
+                                locationListViewModel.updateList(locationsList)
 
                                 actionModeEnabled = false
                                 allSelected = false
@@ -314,7 +314,7 @@ class LocationsListAdapter(val locationsListViewModel: LocationsListViewModel, v
     }
 
     fun deleteLocation(position: Int) {
-        locationsListViewModel.deleteLocation(locationsList[position])
+        locationListViewModel.deleteLocation(locationsList[position])
     }
 
     fun setData(data: ArrayList<Location>) {

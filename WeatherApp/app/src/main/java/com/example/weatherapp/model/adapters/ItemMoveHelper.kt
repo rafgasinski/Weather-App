@@ -22,7 +22,7 @@ import kotlin.collections.ArrayList
 
 
 @SuppressLint("ClickableViewAccessibility")
-class ItemMoveHelper(private val recyclerView: RecyclerView, private val adapter: LocationsListAdapter) : ItemTouchHelper.Callback(){
+class ItemMoveHelper(private val recyclerView: RecyclerView, private val adapter: LocationListAdapter) : ItemTouchHelper.Callback(){
 
     private lateinit var deleteButton: ActionButton
     private lateinit var gestureDetector: GestureDetector

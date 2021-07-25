@@ -9,23 +9,23 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.weatherapp.FirstSearch
-import com.example.weatherapp.databinding.FragmentLocationsListBinding
+import com.example.weatherapp.databinding.FragmentLocationListBinding
 import com.example.weatherapp.model.adapters.ItemMoveHelper
-import com.example.weatherapp.model.adapters.LocationsListAdapter
+import com.example.weatherapp.model.adapters.LocationListAdapter
 import com.example.weatherapp.model.db.location.Location
 import com.example.weatherapp.utils.*
-import com.example.weatherapp.viewmodel.LocationsListViewModel
+import com.example.weatherapp.viewmodel.LocationListViewModel
 import java.util.*
 
 
-class LocationsList: Fragment() {
+class LocationList: Fragment() {
 
-    private var _binding: FragmentLocationsListBinding? = null
+    private var _binding: FragmentLocationListBinding? = null
     private val binding get() = _binding!!
 
-    private val locationsListViewModel: LocationsListViewModel by activityViewModels()
+    private val locationListViewModel: LocationListViewModel by activityViewModels()
 
-    private lateinit var adapterLocationsList: LocationsListAdapter
+    private lateinit var adapterLocationList: LocationListAdapter
 
     private lateinit var networkConnection: NetworkConnectionListener
 
@@ -40,15 +40,15 @@ class LocationsList: Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentLocationsListBinding.inflate(inflater, container, false)
+        _binding = FragmentLocationListBinding.inflate(inflater, container, false)
 
-        adapterLocationsList = LocationsListAdapter(locationsListViewModel, binding.searchView)
+        adapterLocationList = LocationListAdapter(locationListViewModel, binding.searchView)
 
         networkConnection = NetworkConnectionListener(requireContext())
         networkConnection.observe(viewLifecycleOwner, { connected ->
             if(connected) {
                 handler.postDelayed({
-                    locationsListViewModel.updateLocationsData()
+                    locationListViewModel.updateLocationsData()
                 }, 300)
             }
         })
@@ -58,12 +58,12 @@ class LocationsList: Fragment() {
         }
 
         binding.locationsRecyclerView.apply {
-            adapter = adapterLocationsList
+            adapter = adapterLocationList
         }
 
         adjustTheme(requireContext(), requireActivity())
 
-        locationsListViewModel.allLocationsLiveData.observe(viewLifecycleOwner, { locationList ->
+        locationListViewModel.allLocationsLiveData.observe(viewLifecycleOwner, { locationList ->
             if(!locationList.map{ "${it.city}, ${it.countryCode}" }.contains("${preferencesManager.city}, ${preferencesManager.countryCode}") && locationList.isNotEmpty()){
                 val location = locationList.first()
                 preferencesManager.locationId = location.id
@@ -84,10 +84,10 @@ class LocationsList: Fragment() {
                 activity?.finish()
             }
 
-            adapterLocationsList.setData(locationList as ArrayList<Location>)
+            adapterLocationList.setData(locationList as ArrayList<Location>)
         })
 
-        val itemMoveHelper = ItemMoveHelper(binding.locationsRecyclerView, adapterLocationsList)
+        val itemMoveHelper = ItemMoveHelper(binding.locationsRecyclerView, adapterLocationList)
 
         binding.searchView.apply {
             setOnQueryTextListener(
@@ -95,7 +95,7 @@ class LocationsList: Fragment() {
                     override fun onQueryTextSubmit(textInput: String?): Boolean {
                         textInput?.let {
                             itemMoveHelper.startRecoverItem()
-                            locationsListViewModel.getCityDataAdd(textInput)
+                            locationListViewModel.getCityDataAdd(textInput)
                         }
                         return false
                     }
@@ -107,7 +107,7 @@ class LocationsList: Fragment() {
             )
         }
 
-        locationsListViewModel.toastMessage.observe(viewLifecycleOwner, { event ->
+        locationListViewModel.toastMessage.observe(viewLifecycleOwner, { event ->
             event?.getContentIfNotHandledOrReturnNull()?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
             }

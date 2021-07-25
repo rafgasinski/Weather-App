@@ -12,18 +12,18 @@
         tools:layout="@layout/fragment_current_weather" >
         <action
             android:id="@+id/action_currentWeather_to_locationsList"
-            app:destination="@id/locationsList"
-            app:popUpTo="@+id/locationsList"
+            app:destination="@id/locationList"
+            app:popUpTo="@+id/locationList"
             app:popUpToInclusive="true"/>
     </fragment>
 
     <fragment
-        android:id="@+id/locationsList"
-        android:name="com.example.weatherapp.view.LocationsList"
-        android:label="fragment_locations_list"
-        tools:layout="@layout/fragment_locations_list" >
+        android:id="@+id/locationList"
+        android:name="com.example.weatherapp.view.LocationList"
+        android:label="fragment_location_list"
+        tools:layout="@layout/fragment_location_list" >
         <action
-            android:id="@+id/action_locationsList_to_currentWeather"
+            android:id="@+id/action_locationList_to_currentWeather"
             app:destination="@id/currentWeather"
             app:popUpTo="@+id/currentWeather"
             app:popUpToInclusive="true"/>
